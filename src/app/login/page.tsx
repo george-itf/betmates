@@ -23,12 +23,15 @@ export default function LoginPage() {
       });
 
       if (authError) {
-        setError(authError.message || "Failed to send link");
+        // Log full error for debugging
+        console.error("Auth error:", authError);
+        setError(authError.message || JSON.stringify(authError) || "Failed to send link");
       } else {
         setSent(true);
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong");
+      console.error("Catch error:", err);
+      setError(err instanceof Error ? err.message : JSON.stringify(err) || "Something went wrong");
     }
     setLoading(false);
   };
@@ -60,7 +63,9 @@ export default function LoginPage() {
               required
               disabled={loading}
             />
-            {error && <p className="text-sm text-[var(--red)]">{error}</p>}
+            {error && (
+              <p className="text-sm text-[var(--red)] break-words">{error}</p>
+            )}
             <button 
               type="submit" 
               disabled={loading}
