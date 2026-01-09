@@ -4,6 +4,7 @@ import Link from "next/link";
 import { SettingsForm } from "@/components/settings-form";
 import { MembersList } from "@/components/members-list";
 import { SeasonControls } from "@/components/season-controls";
+import { PaymentsTracker } from "@/components/payments-tracker";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -47,8 +48,24 @@ export default async function SettingsPage({ params }: PageProps) {
     profiles: Array.isArray(m.profiles) ? m.profiles[0] : m.profiles
   }));
 
-  const seasons = (league.seasons || []) as Array<{ id: string; status: string; season_number: number; pot_amount: number; winner_id: string | null }>;
+  const seasons = (league.seasons || []) as Array<{ id: string; status: string; season_number: number; starts_at: string; pot_amount: number; winner_id: string | null }>;
   const currentSeason = seasons.find((s) => s.status === "active");
+
+  // Calculate current week
+  const currentWeek = currentSeason 
+    ? Math.max(1, Math.ceil((Date.now() - new Date(currentSeason.starts_at).getTime()) / (7 * 24 * 60 * 60 * 1000))) 
+    : 1;
+
+  // Get payments for current week
+  let payments: Array<{ user_id: string; status: string }> = [];
+  if (currentSeason) {
+    const { data } = await supabase
+      .from("payments")
+      .select("user_id, status")
+      .eq("season_id", currentSeason.id)
+      .eq("week_number", currentWeek);
+    payments = data || [];
+  }
 
   return (
     <main className="min-h-screen px-5 py-6 safe-t safe-b">
@@ -69,6 +86,21 @@ export default async function SettingsPage({ params }: PageProps) {
             Invite code: <span className="mono normal-case">{league.invite_code}</span>
           </h2>
         </section>
+
+        {currentSeason && (
+          <section className="mb-8">
+            <h2 className="text-xs text-[var(--muted)] uppercase tracking-wide mb-3">
+              Week {currentWeek} payments
+            </h2>
+            <PaymentsTracker
+              seasonId={currentSeason.id}
+              weekNumber={currentWeek}
+              members={members}
+              payments={payments}
+              buyin={league.weekly_buyin}
+            />
+          </section>
+        )}
 
         <section className="mb-8">
           <h2 className="text-xs text-[var(--muted)] uppercase tracking-wide mb-3">Members ({members.length})</h2>

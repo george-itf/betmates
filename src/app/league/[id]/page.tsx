@@ -30,8 +30,25 @@ export default async function LeaguePage({ params }: PageProps) {
 
   if (!league) notFound();
 
-  const seasons = (league.seasons || []) as Array<{ id: string; status: string; season_number: number; ends_at: string; pot_amount: number }>;
+  const seasons = (league.seasons || []) as Array<{ id: string; status: string; season_number: number; starts_at: string; ends_at: string; pot_amount: number }>;
   const season = seasons.find((s) => s.status === "active") || seasons[0];
+
+  // Calculate current week
+  const currentWeek = season ? Math.max(1, Math.ceil((Date.now() - new Date(season.starts_at).getTime()) / (7 * 24 * 60 * 60 * 1000))) : 1;
+
+  // Check if user paid this week
+  let hasPaidThisWeek = false;
+  if (season) {
+    const { data: payment } = await supabase
+      .from("payments")
+      .select("id")
+      .eq("season_id", season.id)
+      .eq("user_id", user.id)
+      .eq("week_number", currentWeek)
+      .eq("status", "paid")
+      .single();
+    hasPaidThisWeek = !!payment;
+  }
 
   // Leaderboard
   let leaderboard: Array<{ user_id: string; display_name: string; profit: number; roi: number; wins: number; total_bets: number }> = [];
@@ -57,6 +74,7 @@ export default async function LeaguePage({ params }: PageProps) {
   }
 
   const daysLeft = season ? Math.max(0, Math.ceil((new Date(season.ends_at).getTime() - Date.now()) / 86400000)) : 0;
+  const buyin = league.weekly_buyin || 5;
 
   return (
     <main className="min-h-screen px-5 py-6 safe-t safe-b">
@@ -73,12 +91,34 @@ export default async function LeaguePage({ params }: PageProps) {
           <h1 className="text-lg font-medium">{league.name}</h1>
           <div className="text-right">
             <p className="text-xl font-semibold text-[var(--green)]">£{season?.pot_amount || 0}</p>
-            <p className="text-xs text-[var(--muted)]">{daysLeft}d left</p>
+            <p className="text-xs text-[var(--muted)]">{daysLeft}d left · week {currentWeek}</p>
           </div>
         </div>
 
+        {/* Payment Status */}
+        <div className="flex items-center justify-between py-3 border-y border-[var(--border)] mb-6 text-sm">
+          {hasPaidThisWeek ? (
+            <>
+              <span className="text-[var(--green)]">Week {currentWeek} paid</span>
+              <span className="text-[var(--muted)]">£{buyin}</span>
+            </>
+          ) : (
+            <>
+              <span>Week {currentWeek} buy-in</span>
+              <a
+                href={`https://paypal.me/harbourgate/${buyin}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-3 py-1 bg-[var(--white)] text-[var(--bg)] rounded text-sm font-medium"
+              >
+                Pay £{buyin}
+              </a>
+            </>
+          )}
+        </div>
+
         {/* Invite */}
-        <div className="flex items-center justify-between py-2 border-y border-[var(--border)] mb-6 text-sm">
+        <div className="flex items-center justify-between py-2 border-b border-[var(--border)] mb-6 text-sm">
           <span className="text-[var(--muted)]">Invite</span>
           <span className="mono">{league.invite_code}</span>
         </div>
