@@ -2,22 +2,40 @@ import Link from "next/link";
 
 export default function Home() {
   return (
-    <main className="min-h-screen flex flex-col justify-center px-5 py-12 safe-t safe-b">
-      <div className="max-w-xs mx-auto w-full">
-        <h1 className="text-lg font-medium mb-8">betmates</h1>
-        
-        <div className="text-sm text-[var(--muted)] space-y-3 mb-10">
-          <p>Track bets with friends.</p>
-          <p>Weekly buy-in, 6-week seasons, winner takes the pot.</p>
-          <p>Screenshot your slips or enter manually.</p>
-        </div>
+    <main className="min-h-screen flex flex-col safe-t safe-b">
+      <div className="flex-1 flex flex-col items-center justify-center px-6 py-12">
+        <div className="w-full max-w-sm">
+          {/* Logo */}
+          <div className="text-center mb-10">
+            <h1 className="text-3xl font-bold text-[var(--accent)]">betmates</h1>
+            <p className="text-[var(--text-secondary)] mt-2">Track bets with your mates</p>
+          </div>
 
-        <Link 
-          href="/login" 
-          className="block w-full text-center py-2.5 bg-[var(--white)] text-[var(--bg)] rounded text-sm font-medium"
-        >
-          Sign in
-        </Link>
+          {/* Features */}
+          <div className="card mb-8">
+            <div className="list-item">
+              <span className="text-[var(--text-secondary)]">Weekly buy-in</span>
+              <span className="font-medium">£5/week</span>
+            </div>
+            <div className="list-item">
+              <span className="text-[var(--text-secondary)]">Season length</span>
+              <span className="font-medium">6 weeks</span>
+            </div>
+            <div className="list-item">
+              <span className="text-[var(--text-secondary)]">Winner takes</span>
+              <span className="font-medium text-[var(--accent)]">The pot</span>
+            </div>
+          </div>
+
+          {/* CTA */}
+          <Link href="/login" className="btn btn-primary w-full">
+            Get started
+          </Link>
+          
+          <p className="text-center text-sm text-[var(--text-secondary)] mt-4">
+            Free to use · No card required
+          </p>
+        </div>
       </div>
     </main>
   );

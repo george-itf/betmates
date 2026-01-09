@@ -11,7 +11,11 @@ interface Member {
   profiles: { display_name: string };
 }
 
-export function MembersList({ members, leagueId, currentUserId }: { members: Member[]; leagueId: string; currentUserId: string }) {
+export function MembersList({ members, leagueId, currentUserId }: { 
+  members: Member[]; 
+  leagueId: string; 
+  currentUserId: string 
+}) {
   const [loading, setLoading] = useState<string | null>(null);
   const router = useRouter();
   const supabase = createClient();
@@ -33,7 +37,7 @@ export function MembersList({ members, leagueId, currentUserId }: { members: Mem
   };
 
   const kick = async (id: string, name: string) => {
-    if (!confirm(`Remove ${name}?`)) return;
+    if (!confirm(`Remove ${name} from the league?`)) return;
     setLoading(id);
     await supabase.from("league_members").delete().eq("id", id);
     router.refresh();
@@ -41,37 +45,49 @@ export function MembersList({ members, leagueId, currentUserId }: { members: Mem
   };
 
   return (
-    <ul className="border-t border-[var(--border)]">
+    <div className="space-y-1">
       {members.map((m) => {
         const isMe = m.user_id === currentUserId;
         const isAdmin = m.role === "admin";
         return (
-          <li key={m.id} className="flex items-center justify-between py-2 border-b border-[var(--border)] text-sm">
-            <div>
-              <span>{m.profiles?.display_name}</span>
-              {isMe && <span className="text-[var(--muted)]"> (you)</span>}
-              {isAdmin && <span className="text-[var(--muted)]"> · admin</span>}
+          <div key={m.id} className="list-item">
+            <div className="flex items-center gap-2">
+              <span className="font-medium">{m.profiles?.display_name}</span>
+              {isMe && <span className="badge badge-gray">You</span>}
+              {isAdmin && <span className="badge badge-green">Admin</span>}
             </div>
             {!isMe && (
-              <div className="flex gap-3 text-xs">
+              <div className="flex gap-2">
                 {isAdmin && adminCount > 1 && (
-                  <button onClick={() => demote(m.id)} disabled={loading === m.id} className="text-[var(--muted)]">
+                  <button 
+                    onClick={() => demote(m.id)} 
+                    disabled={loading === m.id} 
+                    className="text-sm text-[var(--text-secondary)]"
+                  >
                     Demote
                   </button>
                 )}
                 {!isAdmin && (
-                  <button onClick={() => promote(m.id)} disabled={loading === m.id} className="text-[var(--muted)]">
+                  <button 
+                    onClick={() => promote(m.id)} 
+                    disabled={loading === m.id} 
+                    className="text-sm text-[var(--accent)]"
+                  >
                     Promote
                   </button>
                 )}
-                <button onClick={() => kick(m.id, m.profiles?.display_name)} disabled={loading === m.id} className="text-[var(--red)]">
+                <button 
+                  onClick={() => kick(m.id, m.profiles?.display_name)} 
+                  disabled={loading === m.id} 
+                  className="text-sm text-[var(--danger)]"
+                >
                   Remove
                 </button>
               </div>
             )}
-          </li>
+          </div>
         );
       })}
-    </ul>
+    </div>
   );
 }

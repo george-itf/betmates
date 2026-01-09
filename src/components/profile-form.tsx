@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 export function ProfileForm({ userId, currentName }: { userId: string; currentName: string }) {
   const [name, setName] = useState(currentName);
   const [loading, setLoading] = useState(false);
+  const [saved, setSaved] = useState(false);
   const router = useRouter();
   const supabase = createClient();
 
@@ -16,22 +17,26 @@ export function ProfileForm({ userId, currentName }: { userId: string; currentNa
     
     setLoading(true);
     await supabase.from("profiles").update({ display_name: name.trim() }).eq("id", userId);
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2000);
     router.refresh();
     setLoading(false);
   };
 
   return (
-    <form onSubmit={handleSave} className="space-y-3">
-      <div>
-        <label className="text-xs text-[var(--muted)] block mb-1">Display name</label>
-        <input value={name} onChange={(e) => setName(e.target.value)} required />
-      </div>
+    <form onSubmit={handleSave} className="space-y-4">
+      <input 
+        value={name} 
+        onChange={(e) => setName(e.target.value)} 
+        placeholder="Your name"
+        required 
+      />
       <button
         type="submit"
         disabled={loading || !name.trim() || name === currentName}
-        className="w-full py-2.5 bg-[var(--white)] text-[var(--bg)] rounded text-sm font-medium"
+        className="btn btn-primary w-full"
       >
-        {loading ? "Saving..." : "Save"}
+        {loading ? "Saving..." : saved ? "Saved ✓" : "Save changes"}
       </button>
     </form>
   );

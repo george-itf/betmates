@@ -13,7 +13,7 @@ export function SignOutButton() {
   };
 
   return (
-    <button onClick={handleSignOut} className="w-full py-2 text-sm text-[var(--red)]">
+    <button onClick={handleSignOut} className="btn btn-danger w-full">
       Sign out
     </button>
   );

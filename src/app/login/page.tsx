@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -21,79 +22,83 @@ export default function LoginPage() {
 
     try {
       if (mode === "signup") {
-        const { error: signUpError } = await supabase.auth.signUp({
-          email,
-          password,
-        });
+        const { error: signUpError } = await supabase.auth.signUp({ email, password });
         if (signUpError) throw signUpError;
-        // Auto sign in after signup
-        const { error: signInError } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
+        const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
         if (signInError) throw signInError;
       } else {
-        const { error: signInError } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
+        const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
         if (signInError) throw signInError;
       }
-      
       router.push("/dashboard");
       router.refresh();
     } catch (err) {
-      console.error("Auth error:", err);
       setError(err instanceof Error ? err.message : "Something went wrong");
     }
     setLoading(false);
   };
 
   return (
-    <main className="min-h-screen flex flex-col justify-center px-5 py-12 safe-t safe-b">
-      <div className="max-w-xs mx-auto w-full">
-        <h1 className="text-lg font-medium mb-6">
-          {mode === "signin" ? "Sign in" : "Create account"}
-        </h1>
+    <main className="min-h-screen flex flex-col safe-t safe-b bg-[var(--bg)]">
+      {/* Header */}
+      <div className="header">
+        <Link href="/" className="text-xl font-bold text-[var(--accent)]">betmates</Link>
+      </div>
 
-        <form onSubmit={handleSubmit} className="space-y-3">
-          <input
-            type="email"
-            placeholder="Email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-            disabled={loading}
-          />
-          <input
-            type="password"
-            placeholder="Password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            disabled={loading}
-            minLength={6}
-          />
-          
-          {error && (
-            <p className="text-sm text-[var(--red)]">{error}</p>
-          )}
-          
-          <button 
-            type="submit" 
-            disabled={loading}
-            className="w-full py-2.5 bg-[var(--white)] text-[var(--bg)] rounded text-sm font-medium"
-          >
-            {loading ? "..." : mode === "signin" ? "Sign in" : "Create account"}
-          </button>
-        </form>
+      <div className="flex-1 flex items-center justify-center px-6 py-12">
+        <div className="w-full max-w-sm">
+          <div className="card">
+            <h1 className="text-xl font-bold mb-6">
+              {mode === "signin" ? "Welcome back" : "Create account"}
+            </h1>
 
-        <button 
-          onClick={() => setMode(mode === "signin" ? "signup" : "signin")}
-          className="w-full mt-4 text-sm text-[var(--muted)]"
-        >
-          {mode === "signin" ? "Need an account? Sign up" : "Have an account? Sign in"}
-        </button>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-2">Email</label>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="you@example.com"
+                  required
+                  disabled={loading}
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium mb-2">Password</label>
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  required
+                  disabled={loading}
+                  minLength={6}
+                />
+              </div>
+
+              {error && (
+                <div className="p-3 rounded-lg bg-red-50 text-[var(--danger)] text-sm">
+                  {error}
+                </div>
+              )}
+
+              <button type="submit" disabled={loading} className="btn btn-primary w-full">
+                {loading ? "Please wait..." : mode === "signin" ? "Sign in" : "Create account"}
+              </button>
+            </form>
+
+            <div className="mt-6 pt-6 border-t border-[var(--border)] text-center">
+              <button 
+                onClick={() => setMode(mode === "signin" ? "signup" : "signin")}
+                className="text-sm text-[var(--accent)] font-medium"
+              >
+                {mode === "signin" ? "Don't have an account? Sign up" : "Already have an account? Sign in"}
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
     </main>
   );

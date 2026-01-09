@@ -33,10 +33,9 @@ export default async function LeaguePage({ params }: PageProps) {
   const seasons = (league.seasons || []) as Array<{ id: string; status: string; season_number: number; starts_at: string; ends_at: string; pot_amount: number }>;
   const season = seasons.find((s) => s.status === "active") || seasons[0];
 
-  // Calculate current week
   const currentWeek = season ? Math.max(1, Math.ceil((Date.now() - new Date(season.starts_at).getTime()) / (7 * 24 * 60 * 60 * 1000))) : 1;
 
-  // Check if user paid this week
+  // Check payment
   let hasPaidThisWeek = false;
   if (season) {
     const { data: payment } = await supabase
@@ -51,7 +50,7 @@ export default async function LeaguePage({ params }: PageProps) {
   }
 
   // Leaderboard
-  let leaderboard: Array<{ user_id: string; display_name: string; profit: number; roi: number; wins: number; total_bets: number }> = [];
+  let leaderboard: Array<{ user_id: string; display_name: string; profit: number }> = [];
   if (season) {
     const { data } = await supabase.rpc("get_season_leaderboard", { p_season_id: season.id });
     leaderboard = data || [];
@@ -77,124 +76,153 @@ export default async function LeaguePage({ params }: PageProps) {
   const buyin = league.weekly_buyin || 5;
 
   return (
-    <main className="min-h-screen px-5 py-6 safe-t safe-b">
-      <div className="max-w-md mx-auto">
-        {/* Header */}
-        <header className="flex items-baseline justify-between mb-1">
-          <Link href="/dashboard" className="text-[var(--muted)] text-sm">← Back</Link>
-          {membership.role === "admin" && (
-            <Link href={`/league/${id}/settings`} className="text-sm text-[var(--muted)]">Settings</Link>
-          )}
-        </header>
+    <main className="min-h-screen bg-[var(--bg)] safe-t pb-24">
+      {/* Header */}
+      <div className="header flex items-center justify-between">
+        <Link href="/dashboard" className="text-[var(--accent)] font-medium">← Back</Link>
+        {membership.role === "admin" && (
+          <Link href={`/league/${id}/settings`} className="text-[var(--accent)] font-medium">Settings</Link>
+        )}
+      </div>
 
-        <div className="flex items-baseline justify-between mb-6">
-          <h1 className="text-lg font-medium">{league.name}</h1>
-          <div className="text-right">
-            <p className="text-xl font-semibold text-[var(--green)]">£{season?.pot_amount || 0}</p>
-            <p className="text-xs text-[var(--muted)]">{daysLeft}d left · week {currentWeek}</p>
+      <div className="p-4 max-w-lg mx-auto">
+        {/* League header */}
+        <div className="card mb-4">
+          <div className="flex items-start justify-between mb-4">
+            <div>
+              <h1 className="text-2xl font-bold">{league.name}</h1>
+              <p className="text-[var(--text-secondary)]">Season {season?.season_number || 1} · {daysLeft} days left</p>
+            </div>
+            <div className="text-right">
+              <p className="text-3xl font-bold text-[var(--accent)]">£{season?.pot_amount || 0}</p>
+              <p className="text-sm text-[var(--text-secondary)]">pot</p>
+            </div>
           </div>
-        </div>
 
-        {/* Payment Status */}
-        <div className="flex items-center justify-between py-3 border-y border-[var(--border)] mb-6 text-sm">
-          {hasPaidThisWeek ? (
-            <>
-              <span className="text-[var(--green)]">Week {currentWeek} paid</span>
-              <span className="text-[var(--muted)]">£{buyin}</span>
-            </>
-          ) : (
-            <>
-              <span>Week {currentWeek} buy-in</span>
+          {/* Payment status */}
+          <div className="flex items-center justify-between p-3 bg-[var(--bg)] rounded-lg">
+            <div>
+              <p className="font-medium">Week {currentWeek} buy-in</p>
+              <p className="text-sm text-[var(--text-secondary)]">£{buyin} per week</p>
+            </div>
+            {hasPaidThisWeek ? (
+              <span className="badge badge-green">Paid ✓</span>
+            ) : (
               <a
                 href={`https://paypal.me/harbourgate/${buyin}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="px-3 py-1 bg-[var(--white)] text-[var(--bg)] rounded text-sm font-medium"
+                className="btn btn-primary text-sm py-2 px-4"
               >
                 Pay £{buyin}
               </a>
-            </>
-          )}
+            )}
+          </div>
         </div>
 
-        {/* Invite */}
-        <div className="flex items-center justify-between py-2 border-b border-[var(--border)] mb-6 text-sm">
-          <span className="text-[var(--muted)]">Invite</span>
-          <span className="mono">{league.invite_code}</span>
+        {/* Invite code */}
+        <div className="card mb-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-[var(--text-secondary)]">Invite code</p>
+              <p className="text-xl font-bold mono">{league.invite_code}</p>
+            </div>
+            <button 
+              onClick={() => navigator.clipboard.writeText(league.invite_code)}
+              className="btn btn-secondary text-sm py-2 px-4"
+            >
+              Copy
+            </button>
+          </div>
         </div>
 
         {/* Leaderboard */}
-        <section className="mb-6">
-          <h2 className="text-xs text-[var(--muted)] uppercase tracking-wide mb-2">Leaderboard</h2>
+        <div className="card mb-4">
+          <h2 className="font-bold mb-3">Leaderboard</h2>
           {leaderboard.length > 0 ? (
-            <ul className="border-t border-[var(--border)]">
+            <div className="space-y-1">
               {leaderboard.map((entry, i) => (
-                <li key={entry.user_id} className="flex items-center justify-between py-2 border-b border-[var(--border)] text-sm">
+                <div key={entry.user_id} className="list-item py-3">
                   <div className="flex items-center gap-3">
-                    <span className="w-5 text-[var(--muted)]">{i + 1}</span>
-                    <span className={entry.user_id === user.id ? "font-medium" : ""}>{entry.display_name}</span>
+                    <span className={`w-6 h-6 rounded-full flex items-center justify-center text-sm font-bold ${
+                      i === 0 ? 'bg-yellow-400 text-yellow-900' : 
+                      i === 1 ? 'bg-gray-300 text-gray-700' : 
+                      i === 2 ? 'bg-orange-300 text-orange-900' : 
+                      'bg-[var(--bg)] text-[var(--text-secondary)]'
+                    }`}>
+                      {i + 1}
+                    </span>
+                    <span className={entry.user_id === user.id ? "font-semibold" : ""}>
+                      {entry.display_name}
+                      {entry.user_id === user.id && <span className="text-[var(--text-secondary)]"> (you)</span>}
+                    </span>
                   </div>
-                  <span className={entry.profit >= 0 ? "text-[var(--green)]" : "text-[var(--red)]"}>
+                  <span className={`font-semibold ${entry.profit >= 0 ? "text-[var(--accent)]" : "text-[var(--danger)]"}`}>
                     {entry.profit >= 0 ? "+" : ""}£{entry.profit.toFixed(2)}
                   </span>
-                </li>
+                </div>
               ))}
-            </ul>
+            </div>
           ) : (
-            <p className="text-sm text-[var(--muted)] py-4">No bets yet</p>
+            <p className="text-[var(--text-secondary)] text-center py-6">No bets yet</p>
           )}
-        </section>
+        </div>
 
         {/* Recent bets */}
-        <section className="mb-6">
-          <h2 className="text-xs text-[var(--muted)] uppercase tracking-wide mb-2">Recent</h2>
+        <div className="card mb-4">
+          <h2 className="font-bold mb-3">Recent bets</h2>
           {bets.length > 0 ? (
-            <ul className="border-t border-[var(--border)]">
+            <div className="space-y-1">
               {bets.map((bet) => {
                 const profile = Array.isArray(bet.profiles) ? bet.profiles[0] : bet.profiles;
                 const profit = bet.status === "settled" ? (bet.actual_return || 0) - bet.stake : 0;
                 return (
-                  <li key={bet.id} className="py-2 border-b border-[var(--border)] text-sm">
-                    <div className="flex justify-between">
-                      <span>{profile?.display_name}</span>
-                      <span>
-                        {bet.status === "settled" ? (
-                          <span className={profit >= 0 ? "text-[var(--green)]" : "text-[var(--red)]"}>
-                            {profit >= 0 ? "+" : ""}£{profit.toFixed(2)}
-                          </span>
-                        ) : (
-                          <span className="text-[var(--muted)]">£{bet.stake}</span>
-                        )}
-                      </span>
+                  <div key={bet.id} className="list-item py-3">
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium">{profile?.display_name}</p>
+                      <p className="text-sm text-[var(--text-secondary)] truncate">
+                        {bet.bet_legs.map((l) => l.selection).join(" · ")}
+                      </p>
                     </div>
-                    <p className="text-[var(--muted)] text-xs truncate">
-                      {bet.bet_legs.map((l) => l.selection).join(" · ")}
-                    </p>
-                  </li>
+                    <div className="text-right ml-3">
+                      {bet.status === "settled" ? (
+                        <span className={`font-semibold ${profit >= 0 ? "text-[var(--accent)]" : "text-[var(--danger)]"}`}>
+                          {profit >= 0 ? "+" : ""}£{profit.toFixed(2)}
+                        </span>
+                      ) : (
+                        <span className="badge badge-yellow">£{bet.stake}</span>
+                      )}
+                    </div>
+                  </div>
                 );
               })}
-            </ul>
+            </div>
           ) : (
-            <p className="text-sm text-[var(--muted)] py-4">No bets yet</p>
+            <p className="text-[var(--text-secondary)] text-center py-6">No bets yet</p>
           )}
-        </section>
+        </div>
 
         {/* Group bets link */}
-        <Link href={`/league/${id}/group-bet`} className="block py-3 border-y border-[var(--border)] text-sm mb-6">
-          <span>Group bets</span>
-          <span className="text-[var(--muted)] float-right">→</span>
+        <Link href={`/league/${id}/group-bet`} className="card flex items-center justify-between mb-4">
+          <div>
+            <p className="font-bold">Group bets</p>
+            <p className="text-sm text-[var(--text-secondary)]">Vote on legs, share the pot</p>
+          </div>
+          <span className="text-[var(--accent)] text-xl">→</span>
         </Link>
+      </div>
 
-        {/* Add bet */}
-        {season && (
+      {/* Fixed bottom button */}
+      {season && (
+        <div className="bottom-fixed">
           <Link
             href={`/league/${id}/bet/new?season=${season.id}`}
-            className="block w-full text-center py-2.5 bg-[var(--white)] text-[var(--bg)] rounded text-sm font-medium"
+            className="btn btn-primary w-full text-lg"
           >
-            Add bet
+            + Add bet
           </Link>
-        )}
-      </div>
+        </div>
+      )}
     </main>
   );
 }

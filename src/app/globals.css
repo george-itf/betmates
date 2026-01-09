@@ -1,26 +1,30 @@
 @import "tailwindcss";
 
 :root {
-  --bg: #0f0f0f;
-  --surface: #161616;
-  --border: #262626;
-  --text: #d4d4d4;
-  --muted: #737373;
-  --white: #fafafa;
-  --green: #22c55e;
-  --red: #ef4444;
+  --bg: #f5f5f5;
+  --surface: #ffffff;
+  --border: #e5e5e5;
+  --text: #1a1a1a;
+  --text-secondary: #666666;
+  --accent: #1e8e3e;
+  --accent-hover: #167c32;
+  --danger: #d93025;
+  --warning: #f9a825;
 }
 
 * {
   -webkit-tap-highlight-color: transparent;
+  box-sizing: border-box;
 }
 
 html, body {
   background: var(--bg);
   color: var(--text);
-  font-family: -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
-  font-size: 15px;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: 16px;
   line-height: 1.5;
+  margin: 0;
+  padding: 0;
 }
 
 @supports (padding: env(safe-area-inset-top)) {
@@ -28,32 +32,123 @@ html, body {
   .safe-b { padding-bottom: env(safe-area-inset-bottom); }
 }
 
-input, select, textarea {
-  background: transparent;
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  padding: 8px 10px;
-  color: var(--text);
-  font-size: 15px;
-  width: 100%;
+/* Cards */
+.card {
+  background: var(--surface);
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
 }
-input:focus, select:focus { outline: none; border-color: var(--muted); }
-input::placeholder { color: var(--muted); }
-input:disabled { opacity: 0.5; }
+
+/* Inputs */
+input, select, textarea {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px 14px;
+  color: var(--text);
+  font-size: 16px;
+  width: 100%;
+  transition: border-color 0.15s;
+}
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+input::placeholder { color: var(--text-secondary); }
+input:disabled { opacity: 0.6; background: var(--bg); }
 
 select {
   appearance: none;
-  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%23737373' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") no-repeat right 10px center;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
 }
 
-button {
+/* Buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 20px;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 600;
   cursor: pointer;
-}
-button:disabled {
-  opacity: 0.4;
-  cursor: default;
+  transition: all 0.15s;
+  border: none;
 }
 
+.btn-primary {
+  background: var(--accent);
+  color: white;
+}
+.btn-primary:hover { background: var(--accent-hover); }
+.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.btn-secondary {
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+.btn-secondary:hover { background: var(--bg); }
+
+.btn-danger {
+  background: var(--danger);
+  color: white;
+}
+
+/* Links */
 a { color: inherit; text-decoration: none; }
 
-.mono { font-family: ui-monospace, monospace; }
+/* Utilities */
+.mono { font-family: ui-monospace, "SF Mono", monospace; }
+.text-secondary { color: var(--text-secondary); }
+.text-accent { color: var(--accent); }
+.text-danger { color: var(--danger); }
+
+/* List items */
+.list-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--border);
+}
+.list-item:last-child { border-bottom: none; }
+
+/* Header */
+.header {
+  background: var(--surface);
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 40;
+}
+
+/* Bottom nav / fixed button */
+.bottom-fixed {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 16px;
+  padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+}
+
+/* Badge */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 100px;
+  font-size: 13px;
+  font-weight: 500;
+}
+.badge-green { background: #e6f4ea; color: #1e8e3e; }
+.badge-yellow { background: #fef7e0; color: #b36200; }
+.badge-red { background: #fce8e6; color: #c5221f; }
+.badge-gray { background: #f1f3f4; color: #5f6368; }

@@ -35,7 +35,6 @@ export function PaymentsTracker({ seasonId, weekNumber, members, payments, buyin
     const isPaid = paidUserIds.has(userId);
 
     if (isPaid) {
-      // Remove payment
       await supabase
         .from("payments")
         .delete()
@@ -43,7 +42,6 @@ export function PaymentsTracker({ seasonId, weekNumber, members, payments, buyin
         .eq("user_id", userId)
         .eq("week_number", weekNumber);
     } else {
-      // Add payment
       await supabase
         .from("payments")
         .insert({
@@ -54,7 +52,6 @@ export function PaymentsTracker({ seasonId, weekNumber, members, payments, buyin
           status: "paid",
         });
       
-      // Update pot amount
       const { data: season } = await supabase
         .from("seasons")
         .select("pot_amount")
@@ -73,32 +70,30 @@ export function PaymentsTracker({ seasonId, weekNumber, members, payments, buyin
 
   return (
     <div>
-      <div className="flex justify-between text-sm py-2 border-y border-[var(--border)] mb-3">
-        <span>{paidCount}/{members.length} paid</span>
-        <span className="text-[var(--green)]">£{totalPaid}/£{totalExpected}</span>
+      {/* Summary */}
+      <div className="flex justify-between items-center p-3 bg-[var(--bg)] rounded-lg mb-4">
+        <span className="font-medium">{paidCount}/{members.length} paid</span>
+        <span className="text-[var(--accent)] font-bold">£{totalPaid} / £{totalExpected}</span>
       </div>
 
-      <ul className="border-t border-[var(--border)]">
+      {/* Members */}
+      <div className="space-y-1">
         {members.map((m) => {
           const isPaid = paidUserIds.has(m.user_id);
           return (
-            <li key={m.user_id} className="flex items-center justify-between py-2 border-b border-[var(--border)] text-sm">
+            <div key={m.user_id} className="list-item">
               <span>{m.profiles?.display_name}</span>
               <button
                 onClick={() => togglePayment(m.user_id)}
                 disabled={loading === m.user_id}
-                className={`px-3 py-1 rounded text-xs ${
-                  isPaid 
-                    ? "bg-[var(--green)] text-[var(--bg)]" 
-                    : "border border-[var(--border)]"
-                }`}
+                className={`btn text-sm py-1 px-3 ${isPaid ? "btn-primary" : "btn-secondary"}`}
               >
-                {loading === m.user_id ? "..." : isPaid ? "Paid" : "Mark paid"}
+                {loading === m.user_id ? "..." : isPaid ? "Paid ✓" : "Mark paid"}
               </button>
-            </li>
+            </div>
           );
         })}
-      </ul>
+      </div>
     </div>
   );
 }

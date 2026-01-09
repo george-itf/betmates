@@ -47,42 +47,58 @@ export function CreateLeagueButton() {
 
   return (
     <>
-      <button onClick={() => setOpen(true)} className="flex-1 py-2.5 bg-[var(--white)] text-[var(--bg)] rounded text-sm font-medium">
-        Create
+      <button onClick={() => setOpen(true)} className="btn btn-primary flex-1">
+        Create league
       </button>
 
       {open && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-5">
-          <div className="absolute inset-0 bg-black/80" onClick={() => setOpen(false)} />
-          <div className="relative bg-[var(--surface)] border border-[var(--border)] rounded-lg p-5 w-full max-w-xs">
-            <h2 className="font-medium mb-4">New league</h2>
-            <form onSubmit={handleCreate} className="space-y-3">
-              <input
-                placeholder="Name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                required
-              />
-              <div className="grid grid-cols-2 gap-3">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
+          <div className="absolute inset-0 bg-black/50" onClick={() => setOpen(false)} />
+          <div className="relative bg-[var(--surface)] rounded-t-2xl sm:rounded-2xl p-6 w-full max-w-md safe-b">
+            <h2 className="text-xl font-bold mb-6">Create a league</h2>
+            
+            <form onSubmit={handleCreate} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-2">League name</label>
+                <input
+                  placeholder="e.g. Sunday League Lads"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  required
+                />
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-xs text-[var(--muted)] block mb-1">Buy-in (£)</label>
-                  <input type="number" value={buyin} onChange={(e) => setBuyin(e.target.value)} min="1" />
+                  <label className="block text-sm font-medium mb-2">Weekly buy-in</label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-secondary)]">£</span>
+                    <input 
+                      type="number" 
+                      value={buyin} 
+                      onChange={(e) => setBuyin(e.target.value)} 
+                      min="1" 
+                      className="pl-7"
+                    />
+                  </div>
                 </div>
                 <div>
-                  <label className="text-xs text-[var(--muted)] block mb-1">Weeks</label>
+                  <label className="block text-sm font-medium mb-2">Season length</label>
                   <select value={weeks} onChange={(e) => setWeeks(e.target.value)}>
-                    <option>4</option>
-                    <option>6</option>
-                    <option>8</option>
+                    <option value="4">4 weeks</option>
+                    <option value="6">6 weeks</option>
+                    <option value="8">8 weeks</option>
+                    <option value="12">12 weeks</option>
                   </select>
                 </div>
               </div>
-              <div className="flex gap-2 pt-2">
-                <button type="button" onClick={() => setOpen(false)} className="flex-1 py-2 border border-[var(--border)] rounded text-sm">
+
+              <div className="flex gap-3 pt-4">
+                <button type="button" onClick={() => setOpen(false)} className="btn btn-secondary flex-1">
                   Cancel
                 </button>
-                <button type="submit" disabled={loading || !name} className="flex-1 py-2 bg-[var(--white)] text-[var(--bg)] rounded text-sm font-medium">
-                  {loading ? "..." : "Create"}
+                <button type="submit" disabled={loading || !name} className="btn btn-primary flex-1">
+                  {loading ? "Creating..." : "Create"}
                 </button>
               </div>
             </form>

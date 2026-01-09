@@ -9,7 +9,6 @@ interface Season {
   season_number: number;
   status: string;
   pot_amount: number;
-  winner_id: string | null;
 }
 
 interface Member {
@@ -64,37 +63,39 @@ export function SeasonControls({
   return (
     <div>
       {currentSeason ? (
-        <div className="space-y-3">
-          <div className="flex justify-between text-sm py-2 border-y border-[var(--border)]">
+        <div className="space-y-4">
+          <div className="flex justify-between items-center p-3 bg-[var(--bg)] rounded-lg">
             <span>Season {currentSeason.season_number}</span>
-            <span className="text-[var(--green)]">£{currentSeason.pot_amount || 0}</span>
+            <span className="font-bold text-[var(--accent)]">£{currentSeason.pot_amount || 0} pot</span>
           </div>
+
           {!showEnd ? (
-            <button onClick={() => setShowEnd(true)} className="text-sm text-[var(--muted)]">
+            <button onClick={() => setShowEnd(true)} className="btn btn-secondary w-full">
               End season
             </button>
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-3 p-4 bg-[var(--bg)] rounded-lg">
+              <p className="font-medium">Select winner</p>
               <select value={winner} onChange={(e) => setWinner(e.target.value)}>
-                <option value="">Select winner</option>
+                <option value="">Choose winner...</option>
                 {members.map((m) => (
                   <option key={m.user_id} value={m.user_id}>{m.profiles?.display_name}</option>
                 ))}
               </select>
               <div className="flex gap-2">
-                <button onClick={() => setShowEnd(false)} className="flex-1 py-2 border border-[var(--border)] rounded text-sm">
+                <button onClick={() => setShowEnd(false)} className="btn btn-secondary flex-1">
                   Cancel
                 </button>
-                <button onClick={endSeason} disabled={!winner || loading} className="flex-1 py-2 bg-[var(--white)] text-[var(--bg)] rounded text-sm">
-                  Confirm
+                <button onClick={endSeason} disabled={!winner || loading} className="btn btn-primary flex-1">
+                  {loading ? "..." : "Confirm"}
                 </button>
               </div>
             </div>
           )}
         </div>
       ) : (
-        <button onClick={startSeason} disabled={loading} className="w-full py-2.5 bg-[var(--white)] text-[var(--bg)] rounded text-sm font-medium">
-          {loading ? "..." : "Start new season"}
+        <button onClick={startSeason} disabled={loading} className="btn btn-primary w-full">
+          {loading ? "Starting..." : "Start new season"}
         </button>
       )}
     </div>

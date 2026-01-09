@@ -28,7 +28,7 @@ export function JoinLeagueButton() {
       .single();
 
     if (!league) {
-      setError("Invalid code");
+      setError("Invalid invite code");
       setLoading(false);
       return;
     }
@@ -52,30 +52,40 @@ export function JoinLeagueButton() {
 
   return (
     <>
-      <button onClick={() => setOpen(true)} className="flex-1 py-2.5 border border-[var(--border)] rounded text-sm">
-        Join
+      <button onClick={() => setOpen(true)} className="btn btn-secondary flex-1">
+        Join league
       </button>
 
       {open && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-5">
-          <div className="absolute inset-0 bg-black/80" onClick={() => setOpen(false)} />
-          <div className="relative bg-[var(--surface)] border border-[var(--border)] rounded-lg p-5 w-full max-w-xs">
-            <h2 className="font-medium mb-4">Join league</h2>
-            <form onSubmit={handleJoin} className="space-y-3">
-              <input
-                placeholder="Invite code"
-                value={code}
-                onChange={(e) => setCode(e.target.value)}
-                required
-                className="mono"
-              />
-              {error && <p className="text-sm text-[var(--red)]">{error}</p>}
-              <div className="flex gap-2 pt-2">
-                <button type="button" onClick={() => setOpen(false)} className="flex-1 py-2 border border-[var(--border)] rounded text-sm">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
+          <div className="absolute inset-0 bg-black/50" onClick={() => setOpen(false)} />
+          <div className="relative bg-[var(--surface)] rounded-t-2xl sm:rounded-2xl p-6 w-full max-w-md safe-b">
+            <h2 className="text-xl font-bold mb-6">Join a league</h2>
+            
+            <form onSubmit={handleJoin} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-2">Invite code</label>
+                <input
+                  placeholder="e.g. abc123"
+                  value={code}
+                  onChange={(e) => setCode(e.target.value)}
+                  required
+                  className="mono text-center text-xl tracking-widest"
+                />
+              </div>
+
+              {error && (
+                <div className="p-3 rounded-lg bg-red-50 text-[var(--danger)] text-sm">
+                  {error}
+                </div>
+              )}
+
+              <div className="flex gap-3 pt-4">
+                <button type="button" onClick={() => setOpen(false)} className="btn btn-secondary flex-1">
                   Cancel
                 </button>
-                <button type="submit" disabled={loading || !code} className="flex-1 py-2 bg-[var(--white)] text-[var(--bg)] rounded text-sm font-medium">
-                  {loading ? "..." : "Join"}
+                <button type="submit" disabled={loading || !code} className="btn btn-primary flex-1">
+                  {loading ? "Joining..." : "Join"}
                 </button>
               </div>
             </form>
