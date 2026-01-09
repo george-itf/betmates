@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { IconCamera, IconEdit, IconX, IconPlus } from "@/components/icons";
+import { IconEdit, IconX, IconPlus } from "@/components/icons";
 import { OddsBrowser } from "@/components/odds-browser";
 import { logActivity } from "@/lib/activity";
 
@@ -24,11 +24,9 @@ export default function NewBetPage({ params }: { params: Promise<{ id: string }>
   const searchParams = useSearchParams();
   const seasonId = searchParams.get("season");
 
-  const [mode, setMode] = useState<"choose" | "upload" | "manual">("choose");
-  const [loadingText, setLoadingText] = useState("");
+  const [mode, setMode] = useState<"choose" | "manual">("choose");
   const [saving, setSaving] = useState(false);
   const [showBrowser, setShowBrowser] = useState(false);
-  const [error, setError] = useState("");
 
   const [stake, setStake] = useState("");
   const [potentialReturn, setPotentialReturn] = useState("");
@@ -48,67 +46,6 @@ export default function NewBetPage({ params }: { params: Promise<{ id: string }>
       setPotentialReturn((parseFloat(stake) * totalOdds).toFixed(2));
     }
   }, [stake, legs]);
-
-  const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    setError("");
-    setMode("upload");
-    setLoadingText("Uploading image...");
-
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        setError("Not logged in");
-        setMode("choose");
-        return;
-      }
-
-      // Upload to storage (optional - for record keeping)
-      const path = `${user.id}/${Date.now()}-${file.name}`;
-      await supabase.storage.from("screenshots").upload(path, file);
-
-      setLoadingText("Reading bet slip with AI...");
-
-      // Parse with Claude
-      const formData = new FormData();
-      formData.append("image", file);
-
-      const res = await fetch("/api/parse-screenshot", { method: "POST", body: formData });
-      const data = await res.json();
-
-      console.log("Parse result:", data);
-
-      if (data.error) {
-        setError(data.error);
-        setMode("manual");
-        setLegs([{ selection: "", odds: "" }]);
-        return;
-      }
-
-      // Populate form with parsed data
-      if (data.stake) setStake(data.stake.toString());
-      if (data.potential_return) setPotentialReturn(data.potential_return.toString());
-      if (data.status) setStatus(data.status);
-      if (data.legs?.length) {
-        setLegs(data.legs.map((l: { selection: string; odds_fractional: string; odds_decimal: number }) => ({
-          selection: l.selection || "",
-          odds: l.odds_fractional || "",
-          oddsDecimal: l.odds_decimal,
-        })));
-      } else {
-        setLegs([{ selection: "", odds: "" }]);
-      }
-
-      setMode("manual");
-    } catch (err) {
-      console.error("Screenshot error:", err);
-      setError("Failed to process screenshot");
-      setMode("manual");
-      setLegs([{ selection: "", odds: "" }]);
-    }
-  };
 
   const handleBrowseSelect = (selection: {
     selection: string;
@@ -220,13 +157,6 @@ export default function NewBetPage({ params }: { params: Promise<{ id: string }>
       </div>
 
       <div className="p-4 max-w-lg mx-auto">
-        {/* Error message */}
-        {error && (
-          <div className="mb-4 p-3 bg-red-50 text-[var(--danger)] rounded text-sm">
-            {error}
-          </div>
-        )}
-
         {mode === "choose" && (
           <div className="space-y-4">
             <p className="text-[var(--text-secondary)] text-center text-sm mb-6">How do you want to add your bet?</p>
@@ -241,28 +171,11 @@ export default function NewBetPage({ params }: { params: Promise<{ id: string }>
               <p className="text-sm text-[var(--text-secondary)]">Pick from today's fixtures</p>
             </button>
 
-            <label className="card block cursor-pointer text-center py-8 hover:border-[var(--accent)] transition-colors">
-              <input type="file" accept="image/*" onChange={handleFile} className="hidden" />
-              <IconCamera className="w-10 h-10 mx-auto mb-3 text-[var(--text-secondary)]" />
-              <p className="font-semibold">Upload Screenshot</p>
-              <p className="text-sm text-[var(--text-secondary)]">We'll read your bet slip automatically</p>
-            </label>
-
             <button onClick={() => { setLegs([{ selection: "", odds: "" }]); setMode("manual"); }} className="card block w-full text-center py-8 hover:border-[var(--accent)] transition-colors">
               <IconEdit className="w-10 h-10 mx-auto mb-3 text-[var(--text-secondary)]" />
               <p className="font-semibold">Enter Manually</p>
               <p className="text-sm text-[var(--text-secondary)]">Type in your bet details</p>
             </button>
-          </div>
-        )}
-
-        {mode === "upload" && (
-          <div className="card text-center py-12">
-            <div className="animate-pulse">
-              <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-[var(--accent)] opacity-20"></div>
-              <p className="font-medium">{loadingText}</p>
-              <p className="text-sm text-[var(--text-secondary)] mt-1">This may take a few seconds</p>
-            </div>
           </div>
         )}
 
