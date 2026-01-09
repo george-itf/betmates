@@ -1,132 +1,59 @@
 @import "tailwindcss";
 
 :root {
-  --background: #0a0a0a;
-  --foreground: #ededed;
-  --card: #1a1a1a;
-  --card-hover: #252525;
-  --card-border: #2d2d2d;
-  --border: #2d2d2d;
+  --bg: #0f0f0f;
+  --surface: #161616;
+  --border: #262626;
+  --text: #d4d4d4;
   --muted: #737373;
-  --accent: #3b82f6;
-  --accent-hover: #2563eb;
-  --success: #22c55e;
-  --danger: #ef4444;
-  --warning: #f59e0b;
+  --white: #fafafa;
+  --green: #22c55e;
+  --red: #ef4444;
 }
 
 * {
   -webkit-tap-highlight-color: transparent;
 }
 
-body {
-  background-color: var(--background);
-  color: var(--foreground);
+html, body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  font-size: 15px;
+  line-height: 1.5;
 }
 
-/* iOS safe areas */
-@supports (padding-top: env(safe-area-inset-top)) {
-  .safe-top {
-    padding-top: env(safe-area-inset-top);
-  }
-  .safe-bottom {
-    padding-bottom: env(safe-area-inset-bottom);
-  }
+@supports (padding: env(safe-area-inset-top)) {
+  .safe-t { padding-top: env(safe-area-inset-top); }
+  .safe-b { padding-bottom: env(safe-area-inset-bottom); }
 }
 
-/* Custom scrollbar */
-::-webkit-scrollbar {
-  width: 4px;
-}
-
-::-webkit-scrollbar-track {
-  background: var(--background);
-}
-
-::-webkit-scrollbar-thumb {
-  background: var(--muted);
-  border-radius: 2px;
-}
-
-/* Input styles */
-input, textarea, select {
-  background-color: var(--card);
+input, select, textarea {
+  background: transparent;
   border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 12px 16px;
-  color: var(--foreground);
+  border-radius: 4px;
+  padding: 8px 10px;
+  color: var(--text);
+  font-size: 15px;
   width: 100%;
-  font-size: 16px; /* Prevents iOS zoom */
 }
-
-input:focus, textarea:focus, select:focus {
-  outline: none;
-  border-color: var(--accent);
-}
-
-input::placeholder {
-  color: var(--muted);
-}
-
-input:disabled, textarea:disabled, select:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
+input:focus, select:focus { outline: none; border-color: var(--muted); }
+input::placeholder { color: var(--muted); }
+input:disabled { opacity: 0.5; }
 
 select {
   appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23737373' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 12px center;
-  padding-right: 40px;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%23737373' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") no-repeat right 10px center;
 }
 
-/* Button base */
-.btn {
-  padding: 12px 24px;
-  border-radius: 8px;
-  font-weight: 500;
-  transition: all 0.15s ease;
+button {
   cursor: pointer;
-  background-color: var(--card);
-  color: var(--foreground);
-  border: 1px solid var(--border);
+}
+button:disabled {
+  opacity: 0.4;
+  cursor: default;
 }
 
-.btn:hover {
-  background-color: var(--card-hover);
-}
+a { color: inherit; text-decoration: none; }
 
-.btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.btn-primary {
-  background-color: var(--accent);
-  color: white;
-  border: none;
-}
-
-.btn-primary:hover {
-  background-color: var(--accent-hover);
-}
-
-.btn-danger {
-  background-color: var(--danger);
-  color: white;
-  border: none;
-}
-
-/* Card */
-.card {
-  background-color: var(--card);
-  border: 1px solid var(--card-border);
-  border-radius: 12px;
-  padding: 16px;
-}
-
-/* Transitions */
-.card, .btn, input, select, textarea {
-  transition: border-color 0.15s ease, background-color 0.15s ease;
-}
+.mono { font-family: ui-monospace, monospace; }

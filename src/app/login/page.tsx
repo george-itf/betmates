@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import Link from "next/link";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -19,81 +18,54 @@ export default function LoginPage() {
 
     const { error } = await supabase.auth.signInWithOtp({
       email,
-      options: {
-        emailRedirectTo: `${window.location.origin}/auth/callback`,
-      },
+      options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
     });
 
     if (error) {
       setError(error.message);
-      setLoading(false);
     } else {
       setSent(true);
-      setLoading(false);
     }
+    setLoading(false);
   };
 
-  if (sent) {
-    return (
-      <main className="min-h-screen flex flex-col items-center justify-center p-6 safe-top safe-bottom">
-        <div className="max-w-md w-full text-center space-y-6">
-          <div className="text-5xl">📧</div>
-          <h1 className="text-2xl font-bold">check your email</h1>
-          <p className="text-[var(--muted)]">
-            we sent a magic link to <span className="text-white">{email}</span>
-          </p>
-          <p className="text-sm text-[var(--muted)]">
-            click the link to sign in - no password needed
-          </p>
-          <button
-            onClick={() => setSent(false)}
-            className="text-[var(--accent)] text-sm"
-          >
-            use a different email
-          </button>
-        </div>
-      </main>
-    );
-  }
-
   return (
-    <main className="min-h-screen flex flex-col items-center justify-center p-6 safe-top safe-bottom">
-      <div className="max-w-md w-full space-y-8">
-        <div className="text-center space-y-2">
-          <Link href="/" className="text-2xl font-bold">
-            betmates
-          </Link>
-          <p className="text-[var(--muted)]">sign in with your email</p>
-        </div>
+    <main className="min-h-screen flex flex-col justify-center px-5 py-12 safe-t safe-b">
+      <div className="max-w-xs mx-auto w-full">
+        <h1 className="text-lg font-medium mb-6">
+          {sent ? "Check your email" : "Sign in"}
+        </h1>
 
-        <form onSubmit={handleLogin} className="space-y-4">
-          <div>
+        {sent ? (
+          <div className="text-sm text-[var(--muted)]">
+            <p>Link sent to {email}</p>
+            <button 
+              onClick={() => setSent(false)} 
+              className="mt-4 text-[var(--text)]"
+            >
+              Try different email
+            </button>
+          </div>
+        ) : (
+          <form onSubmit={handleLogin} className="space-y-4">
             <input
               type="email"
-              placeholder="your@email.com"
+              placeholder="Email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
               disabled={loading}
             />
-          </div>
-
-          {error && (
-            <p className="text-[var(--danger)] text-sm text-center">{error}</p>
-          )}
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="btn btn-primary w-full disabled:opacity-50"
-          >
-            {loading ? "sending..." : "send magic link"}
-          </button>
-        </form>
-
-        <p className="text-center text-sm text-[var(--muted)]">
-          we'll email you a link - no password needed
-        </p>
+            {error && <p className="text-sm text-[var(--red)]">{error}</p>}
+            <button 
+              type="submit" 
+              disabled={loading}
+              className="w-full py-2.5 bg-[var(--white)] text-[var(--bg)] rounded text-sm font-medium"
+            >
+              {loading ? "Sending..." : "Send link"}
+            </button>
+          </form>
+        )}
       </div>
     </main>
   );

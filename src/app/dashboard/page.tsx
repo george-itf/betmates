@@ -1,124 +1,74 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { LeagueCard } from "@/components/league-card";
 import { CreateLeagueButton } from "@/components/create-league-button";
 import { JoinLeagueButton } from "@/components/join-league-button";
 
-interface Season {
-  id: string;
-  season_number: number;
-  status: string;
-  starts_at: string;
-  ends_at: string;
-  pot_amount: number;
-}
-
-interface League {
-  id: string;
-  name: string;
-  invite_code: string;
-  weekly_buyin: number;
-  seasons: Season[];
-}
-
-interface Membership {
-  role: string;
-  league: League;
-}
-
 export default async function DashboardPage() {
   const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    redirect("/login");
-  }
-
-  // Get user's profile
   const { data: profile } = await supabase
     .from("profiles")
-    .select("*")
+    .select("display_name")
     .eq("id", user.id)
     .single();
 
-  // Get user's leagues with current season info
   const { data: memberships } = await supabase
     .from("league_members")
     .select(`
       role,
       league:leagues (
-        id,
-        name,
-        invite_code,
-        weekly_buyin,
-        seasons (
-          id,
-          season_number,
-          status,
-          starts_at,
-          ends_at,
-          pot_amount
-        )
+        id, name,
+        seasons ( id, season_number, status, pot_amount )
       )
     `)
     .eq("user_id", user.id);
 
-  const typedMemberships = memberships as unknown as Membership[];
-
-  const leagues = typedMemberships?.map((m) => {
-    const league = m.league;
-    const seasons = league?.seasons || [];
-    return {
-      ...league,
-      role: m.role,
-      currentSeason: seasons.find((s) => s.status === "active") || 
-                     seasons.find((s) => s.status === "upcoming") ||
-                     seasons[0],
+  const leagues = (memberships as unknown as Array<{
+    role: string;
+    league: {
+      id: string;
+      name: string;
+      seasons: Array<{ id: string; season_number: number; status: string; pot_amount: number }>;
     };
+  }>)?.map((m) => {
+    const s = m.league?.seasons?.find((s) => s.status === "active") || m.league?.seasons?.[0];
+    return { ...m.league, role: m.role, season: s };
   }) || [];
 
   return (
-    <main className="min-h-screen p-6 safe-top safe-bottom">
-      <div className="max-w-lg mx-auto space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold">hey {profile?.display_name || "mate"}</h1>
-            <p className="text-[var(--muted)] text-sm">your leagues</p>
-          </div>
-          <Link
-            href="/profile"
-            className="w-10 h-10 rounded-full bg-[var(--card)] flex items-center justify-center text-lg"
-          >
-            {profile?.display_name?.[0]?.toUpperCase() || "?"}
-          </Link>
-        </div>
+    <main className="min-h-screen px-5 py-6 safe-t safe-b">
+      <div className="max-w-md mx-auto">
+        <header className="flex items-baseline justify-between mb-6">
+          <h1 className="text-lg font-medium">{profile?.display_name || "Leagues"}</h1>
+          <Link href="/profile" className="text-sm text-[var(--muted)]">Profile</Link>
+        </header>
 
-        {/* Leagues */}
         {leagues.length > 0 ? (
-          <div className="space-y-3">
-            {leagues.map((league) => (
-              <LeagueCard key={league.id} league={league} />
+          <ul className="border-t border-[var(--border)]">
+            {leagues.map((l) => (
+              <li key={l.id} className="border-b border-[var(--border)]">
+                <Link href={`/league/${l.id}`} className="flex justify-between py-3">
+                  <div>
+                    <span className="font-medium">{l.name}</span>
+                    <span className="text-[var(--muted)] text-sm ml-2">
+                      S{l.season?.season_number || 1}
+                    </span>
+                  </div>
+                  <span className="text-[var(--green)] font-medium">
+                    £{l.season?.pot_amount || 0}
+                  </span>
+                </Link>
+              </li>
             ))}
-          </div>
+          </ul>
         ) : (
-          <div className="card text-center py-12 space-y-4">
-            <div className="text-4xl">🏆</div>
-            <div>
-              <h2 className="font-medium">no leagues yet</h2>
-              <p className="text-sm text-[var(--muted)]">
-                create one or join with an invite code
-              </p>
-            </div>
-          </div>
+          <p className="text-[var(--muted)] py-8 text-center text-sm">No leagues</p>
         )}
 
-        {/* Actions */}
-        <div className="flex gap-3">
+        <div className="flex gap-2 mt-6">
           <CreateLeagueButton />
           <JoinLeagueButton />
         </div>

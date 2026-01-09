@@ -6,14 +6,8 @@ import { SignOutButton } from "@/components/sign-out-button";
 
 export default async function ProfilePage() {
   const supabase = await createClient();
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    redirect("/login");
-  }
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
 
   const { data: profile } = await supabase
     .from("profiles")
@@ -22,33 +16,21 @@ export default async function ProfilePage() {
     .single();
 
   return (
-    <main className="min-h-screen p-4 safe-top safe-bottom">
-      <div className="max-w-lg mx-auto space-y-8">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <Link href="/dashboard" className="text-[var(--muted)]">
-            ← back
-          </Link>
-          <h1 className="font-bold">profile</h1>
+    <main className="min-h-screen px-5 py-6 safe-t safe-b">
+      <div className="max-w-md mx-auto">
+        <header className="flex items-center justify-between mb-6">
+          <Link href="/dashboard" className="text-[var(--muted)] text-sm">← Back</Link>
+          <h1 className="font-medium">Profile</h1>
           <div className="w-12" />
+        </header>
+
+        <div className="mb-6 pb-6 border-b border-[var(--border)]">
+          <p className="text-sm text-[var(--muted)]">{user.email}</p>
         </div>
 
-        {/* Avatar */}
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-24 h-24 rounded-full bg-[var(--card)] flex items-center justify-center text-3xl font-bold">
-            {profile?.display_name?.[0]?.toUpperCase() || "?"}
-          </div>
-          <p className="text-[var(--muted)]">{user.email}</p>
-        </div>
+        <ProfileForm userId={user.id} currentName={profile?.display_name || ""} />
 
-        {/* Profile Form */}
-        <ProfileForm
-          userId={user.id}
-          currentName={profile?.display_name || ""}
-        />
-
-        {/* Sign Out */}
-        <div className="pt-4 border-t border-[var(--border)]">
+        <div className="mt-8 pt-6 border-t border-[var(--border)]">
           <SignOutButton />
         </div>
       </div>

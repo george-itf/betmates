@@ -4,77 +4,34 @@ import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 
-interface ProfileFormProps {
-  userId: string;
-  currentName: string;
-}
-
-export function ProfileForm({ userId, currentName }: ProfileFormProps) {
+export function ProfileForm({ userId, currentName }: { userId: string; currentName: string }) {
   const [name, setName] = useState(currentName);
   const [loading, setLoading] = useState(false);
-  const [saved, setSaved] = useState(false);
-  const [error, setError] = useState("");
-  
   const router = useRouter();
   const supabase = createClient();
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!name.trim() || name === currentName) return;
     
-    if (!name.trim()) {
-      setError("Name is required");
-      return;
-    }
-
     setLoading(true);
-    setError("");
-    setSaved(false);
-
-    try {
-      const { error: updateError } = await supabase
-        .from("profiles")
-        .update({ display_name: name.trim() })
-        .eq("id", userId);
-
-      if (updateError) throw updateError;
-
-      setSaved(true);
-      setTimeout(() => setSaved(false), 2000);
-      router.refresh();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to save");
-    } finally {
-      setLoading(false);
-    }
+    await supabase.from("profiles").update({ display_name: name.trim() }).eq("id", userId);
+    router.refresh();
+    setLoading(false);
   };
 
   return (
-    <form onSubmit={handleSave} className="card space-y-4">
+    <form onSubmit={handleSave} className="space-y-3">
       <div>
-        <label className="block text-sm text-[var(--muted)] mb-1">
-          display name
-        </label>
-        <input
-          type="text"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          placeholder="your name"
-          required
-          disabled={loading}
-        />
-        <p className="text-xs text-[var(--muted)] mt-1">
-          this is how you appear to other players
-        </p>
+        <label className="text-xs text-[var(--muted)] block mb-1">Display name</label>
+        <input value={name} onChange={(e) => setName(e.target.value)} required />
       </div>
-
-      {error && <p className="text-[var(--danger)] text-sm">{error}</p>}
-
       <button
         type="submit"
-        className="btn btn-primary w-full"
-        disabled={loading || name === currentName}
+        disabled={loading || !name.trim() || name === currentName}
+        className="w-full py-2.5 bg-[var(--white)] text-[var(--bg)] rounded text-sm font-medium"
       >
-        {loading ? "saving..." : saved ? "saved ✓" : "save"}
+        {loading ? "Saving..." : "Save"}
       </button>
     </form>
   );

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 
@@ -8,188 +8,76 @@ interface Submission {
   id: string;
   user_id: string;
   selection: string;
-  event_name: string;
-  odds_decimal: number;
   odds_fractional: string;
   votes_count: number;
-  profiles: {
-    display_name: string;
-    avatar_url: string | null;
-  };
+  profiles: { display_name: string };
 }
 
-interface VotingPanelProps {
+export function VotingPanel({ groupBetId, submissions, votedIds, userId, winningCount }: {
   groupBetId: string;
   submissions: Submission[];
-  votedSubmissionIds: Set<string>;
+  votedIds: Set<string>;
   userId: string;
-  winningLegsCount: number;
-}
-
-export function VotingPanel({
-  groupBetId,
-  submissions,
-  votedSubmissionIds,
-  userId,
-  winningLegsCount,
-}: VotingPanelProps) {
-  const [voted, setVoted] = useState(votedSubmissionIds);
-  const [isPending, startTransition] = useTransition();
+  winningCount: number;
+}) {
+  const [voted, setVoted] = useState(votedIds);
+  const [loading, setLoading] = useState<string | null>(null);
   const router = useRouter();
   const supabase = createClient();
 
-  const handleVote = async (submissionId: string) => {
-    const hasVoted = voted.has(submissionId);
+  const toggle = async (subId: string) => {
+    const isOwn = submissions.find((s) => s.id === subId)?.user_id === userId;
+    if (isOwn) return;
 
-    // Optimistic update
+    setLoading(subId);
+    const hasVoted = voted.has(subId);
+
+    // Optimistic
     setVoted((prev) => {
       const next = new Set(prev);
-      if (hasVoted) {
-        next.delete(submissionId);
-      } else {
-        next.add(submissionId);
-      }
+      hasVoted ? next.delete(subId) : next.add(subId);
       return next;
     });
 
-    try {
-      if (hasVoted) {
-        // Remove vote
-        await supabase
-          .from("group_bet_votes")
-          .delete()
-          .eq("submission_id", submissionId)
-          .eq("user_id", userId);
-
-        // Decrement votes_count
-        await supabase.rpc("decrement_votes", { submission_id: submissionId });
-      } else {
-        // Add vote
-        await supabase.from("group_bet_votes").insert({
-          group_bet_id: groupBetId,
-          submission_id: submissionId,
-          user_id: userId,
-        });
-
-        // Increment votes_count
-        await supabase.rpc("increment_votes", { submission_id: submissionId });
-      }
-
-      startTransition(() => {
-        router.refresh();
-      });
-    } catch (err) {
-      // Revert optimistic update
-      setVoted(votedSubmissionIds);
-      console.error("Vote error:", err);
+    if (hasVoted) {
+      await supabase.from("group_bet_votes").delete().eq("submission_id", subId).eq("user_id", userId);
+      await supabase.rpc("decrement_votes", { submission_id: subId });
+    } else {
+      await supabase.from("group_bet_votes").insert({ group_bet_id: groupBetId, submission_id: subId, user_id: userId });
+      await supabase.rpc("increment_votes", { submission_id: subId });
     }
+
+    router.refresh();
+    setLoading(null);
   };
 
-  // Group submissions by user
-  const byUser = submissions.reduce((acc, s) => {
-    if (!acc[s.user_id]) {
-      acc[s.user_id] = {
-        profile: s.profiles,
-        submissions: [],
-      };
-    }
-    acc[s.user_id].submissions.push(s);
-    return acc;
-  }, {} as Record<string, { profile: { display_name: string; avatar_url: string | null }; submissions: Submission[] }>);
-
-  const totalVotes = voted.size;
-
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h3 className="font-medium">vote for the best legs</h3>
-        <span className="text-sm text-[var(--muted)]">
-          top {winningLegsCount} win
-        </span>
-      </div>
-
-      <div className="card bg-[var(--accent)]/10 border-[var(--accent)]/30">
-        <p className="text-sm">
-          tap legs to vote — you've voted for <strong>{totalVotes}</strong> so far.
-          vote for as many as you like!
-        </p>
-      </div>
-
-      {/* All submissions grouped by user */}
-      <div className="space-y-4">
-        {Object.entries(byUser).map(([oddsUserId, { profile, submissions: userSubs }]) => (
-          <div key={oddsUserId} className="space-y-2">
-            <div className="flex items-center gap-2">
-              <div className="w-6 h-6 rounded-full bg-[var(--background)] flex items-center justify-center text-xs">
-                {profile?.avatar_url ? (
-                  <img
-                    src={profile.avatar_url}
-                    alt=""
-                    className="w-full h-full rounded-full object-cover"
-                  />
-                ) : (
-                  profile?.display_name?.[0]?.toUpperCase() || "?"
-                )}
-              </div>
-              <span className="text-sm font-medium">
-                {oddsUserId === userId ? "your legs" : profile?.display_name}
-              </span>
-            </div>
-
-            <div className="space-y-2 pl-8">
-              {userSubs.map((sub) => {
-                const isVoted = voted.has(sub.id);
-                const isOwn = sub.user_id === userId;
-
-                return (
-                  <button
-                    key={sub.id}
-                    onClick={() => !isOwn && handleVote(sub.id)}
-                    disabled={isOwn || isPending}
-                    className={`card w-full text-left transition-all ${
-                      isVoted
-                        ? "border-[var(--accent)] bg-[var(--accent)]/10"
-                        : isOwn
-                        ? "opacity-60 cursor-not-allowed"
-                        : "hover:border-[var(--accent)]/50"
-                    }`}
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium truncate">{sub.selection}</p>
-                        {sub.event_name && (
-                          <p className="text-sm text-[var(--muted)] truncate">
-                            {sub.event_name}
-                          </p>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-3 ml-3">
-                        <span className="text-sm text-[var(--muted)]">
-                          {sub.odds_fractional}
-                        </span>
-                        <div className="flex items-center gap-1">
-                          <span className={isVoted ? "text-[var(--accent)]" : "text-[var(--muted)]"}>
-                            {isVoted ? "▲" : "△"}
-                          </span>
-                          <span className="text-sm font-medium">
-                            {sub.votes_count + (isVoted && !votedSubmissionIds.has(sub.id) ? 1 : 0) - (!isVoted && votedSubmissionIds.has(sub.id) ? 1 : 0)}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {submissions.length === 0 && (
-        <div className="card text-center py-8">
-          <p className="text-[var(--muted)]">no submissions yet</p>
-        </div>
-      )}
+    <div>
+      <p className="text-xs text-[var(--muted)] mb-3">Vote for the best legs (top {winningCount} win)</p>
+      <ul className="border-t border-[var(--border)]">
+        {submissions.map((sub) => {
+          const isOwn = sub.user_id === userId;
+          const isVoted = voted.has(sub.id);
+          return (
+            <li key={sub.id} className="border-b border-[var(--border)]">
+              <button
+                onClick={() => toggle(sub.id)}
+                disabled={isOwn || loading === sub.id}
+                className={`w-full text-left py-3 text-sm ${isOwn ? "opacity-50" : ""}`}
+              >
+                <div className="flex justify-between">
+                  <span className={isVoted ? "font-medium" : ""}>{sub.selection}</span>
+                  <span className="text-[var(--muted)]">{sub.odds_fractional}</span>
+                </div>
+                <div className="flex justify-between text-xs text-[var(--muted)] mt-1">
+                  <span>{sub.profiles?.display_name}{isOwn ? " (you)" : ""}</span>
+                  <span>{isVoted ? "▲" : "△"} {sub.votes_count + (isVoted && !votedIds.has(sub.id) ? 1 : 0) - (!isVoted && votedIds.has(sub.id) ? 1 : 0)}</span>
+                </div>
+              </button>
+            </li>
+          );
+        })}
+      </ul>
     </div>
   );
 }
