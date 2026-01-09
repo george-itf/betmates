@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
 import { CopyButton } from "@/components/copy-button";
+import { ActivityFeed } from "@/components/activity-feed";
 import { IconArrowLeft, IconSettings, IconArrowRight, IconPlus } from "@/components/icons";
 import { DeadlineCountdown } from "@/components/deadline-countdown";
 
@@ -77,6 +78,21 @@ export default async function LeaguePage({ params }: PageProps) {
 
   const daysLeft = season ? Math.max(0, Math.ceil((new Date(season.ends_at).getTime() - Date.now()) / 86400000)) : 0;
   const buyin = league.weekly_buyin || 5;
+
+  // Get recent activity
+  const { data: activityData } = await supabase
+    .from("activity_log")
+    .select("*")
+    .eq("league_id", id)
+    .order("created_at", { ascending: false })
+    .limit(20);
+
+  const activities = (activityData || []) as Array<{
+    id: string;
+    event_type: string;
+    data: Record<string, unknown>;
+    created_at: string;
+  }>;
 
   return (
     <main className="min-h-screen bg-[var(--bg)] safe-t" style={{ paddingBottom: '100px' }}>
@@ -212,6 +228,15 @@ export default async function LeaguePage({ params }: PageProps) {
           )}
         </div>
 
+        {/* My Bets link */}
+        <Link href={`/league/${id}/bets`} className="card flex items-center justify-between mb-4">
+          <div>
+            <p className="font-semibold text-sm">My Bets</p>
+            <p className="text-xs text-[var(--text-secondary)]">View your bet history and P&L</p>
+          </div>
+          <IconArrowRight className="w-5 h-5 text-[var(--text-secondary)]" />
+        </Link>
+
         {/* Group bets link */}
         <Link href={`/league/${id}/group-bet`} className="card flex items-center justify-between mb-4">
           <div>
@@ -220,6 +245,12 @@ export default async function LeaguePage({ params }: PageProps) {
           </div>
           <IconArrowRight className="w-5 h-5 text-[var(--text-secondary)]" />
         </Link>
+
+        {/* Activity Feed */}
+        <div className="card mb-4">
+          <p className="section-header">Activity</p>
+          <ActivityFeed leagueId={id} initialActivities={activities} />
+        </div>
       </div>
 
       {/* Fixed bottom button */}

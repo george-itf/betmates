@@ -35,19 +35,30 @@ export function CreateGroupBetButton({
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
-    const { data: groupBet } = await supabase
+    // Calculate deadlines (submission: 48 hours, voting: 24 hours after)
+    const submissionDeadline = new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString();
+    const votingDeadline = new Date(Date.now() + 72 * 60 * 60 * 1000).toISOString();
+
+    const { data: groupBet, error } = await supabase
       .from("group_bets")
       .insert({
         season_id: seasonId,
         title,
-        buyin_per_person: parseFloat(buyin),
+        buyin_per_user: parseFloat(buyin),
         legs_per_user: parseInt(legs),
-        winning_leg_count: parseInt(winning),
-        status: "collecting",
-        created_by: user.id,
+        winning_legs_count: parseInt(winning),
+        submission_deadline: submissionDeadline,
+        voting_deadline: votingDeadline,
+        status: "submissions_open",
       })
       .select()
       .single();
+
+    if (error) {
+      console.error("Failed to create group bet:", error);
+      setLoading(false);
+      return;
+    }
 
     if (groupBet) {
       router.push(`/league/${leagueId}/group-bet/${groupBet.id}`);

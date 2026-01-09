@@ -35,6 +35,10 @@ A web app for tracking bets with friends in a competitive league format. Weekly 
 - Weekly buy-in tracking with PayPal integration
 - Submit legs to group bets
 - Vote on group bet selections
+- View bet history with filters (All/Pending/Won/Lost)
+- View P&L totals on bet history page
+- Receive push notifications for bet activities
+- View real-time activity feed on league page
 
 ### Admin Features
 - Edit league name and weekly buy-in
@@ -45,6 +49,7 @@ A web app for tracking bets with friends in a competitive league format. Weekly 
 - End season and declare winner
 - Start new season
 - Create and manage group bets
+- Settle bets (mark as won/lost) from settings page
 
 ---
 
@@ -145,6 +150,23 @@ A web app for tracking bets with friends in a competitive league format. Weekly 
 - user_id (uuid, FK)
 - unique constraint on (submission_id, user_id)
 
+**push_subscriptions**
+- id (uuid)
+- user_id (uuid, FK)
+- endpoint (text)
+- p256dh (text)
+- auth (text)
+- created_at (timestamp)
+- unique constraint on (user_id, endpoint)
+
+**activity_log**
+- id (uuid)
+- league_id (uuid, FK)
+- user_id (uuid, FK)
+- event_type (text: 'bet_placed', 'bet_settled', 'member_joined', 'payment_made', 'group_bet_created')
+- data (jsonb)
+- created_at (timestamp)
+
 ### RLS Policies (Simplified)
 
 All tables have RLS enabled with permissive policies:
@@ -179,20 +201,25 @@ betmates/
 │   │   │   ├── page.tsx
 │   │   │   ├── settings/page.tsx
 │   │   │   ├── bet/new/page.tsx
+│   │   │   ├── bets/page.tsx
 │   │   │   └── group-bet/
 │   │   │       ├── page.tsx
 │   │   │       └── [groupBetId]/page.tsx
 │   │   └── api/
-│   │       └── parse-screenshot/route.ts
+│   │       ├── parse-screenshot/route.ts
+│   │       └── send-push/route.ts
 │   ├── components/
+│   │   ├── activity-feed.tsx
 │   │   ├── copy-button.tsx
 │   │   ├── create-league-button.tsx
 │   │   ├── join-league-button.tsx
 │   │   ├── members-list.tsx
 │   │   ├── payments-tracker.tsx
 │   │   ├── profile-form.tsx
+│   │   ├── push-prompt.tsx
 │   │   ├── season-controls.tsx
 │   │   ├── settings-form.tsx
+│   │   ├── settle-bets.tsx
 │   │   └── sign-out-button.tsx
 │   ├── lib/
 │   │   └── supabase/
@@ -209,7 +236,11 @@ betmates/
 ```env
 NEXT_PUBLIC_SUPABASE_URL=https://wtgjziuwwmpuzjrxqitj.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGc...
+SUPABASE_SERVICE_ROLE_KEY=eyJhbGc...
 ANTHROPIC_API_KEY=sk-ant-...
+NEXT_PUBLIC_VAPID_PUBLIC_KEY=...
+VAPID_PRIVATE_KEY=...
+PUSH_API_KEY=...
 ```
 
 ---
@@ -262,22 +293,42 @@ ANTHROPIC_API_KEY=sk-ant-...
 - Server/client component fixes (onClick handlers)
 - Comprehensive testing and bug fixes
 
+### Session 6
+- Fixed group bet button not showing (schema mismatch)
+- Updated group_bets table column names to match schema
+- Updated group bet status values (submissions_open, voting_open, betting, settled)
+- Added Bet Settlement UI in settings page
+- Created settle-bets.tsx component
+- Added Bet History page (/league/[id]/bets) with filters
+- Added running P&L totals on bet history
+- Implemented push notifications infrastructure
+- Created push_subscriptions table
+- Added push-prompt.tsx component for permission
+- Updated service worker for push events
+- Created /api/send-push endpoint
+- Added Activity Feed with realtime updates
+- Created activity_log table
+- Added activity-feed.tsx component
+- Activity logging on bet settlement
+
 ---
 
 ## Known Issues / TODO
 
 ### Pending
+- Run new SQL migrations in Supabase:
+  - supabase/push_subscriptions.sql
+  - supabase/activity_log.sql
 - Group bet SQL functions need to be run in Supabase:
   - increment_votes
   - decrement_votes
   - transition_to_voting
   - finalize_group_bet
 - PWA icons returning 404 (need to add icon files)
+- Generate and configure VAPID keys for push notifications
 
 ### Future Enhancements
 - Custom domain
-- Push notifications for bet results
-- Settle individual bets feature
 - Historical season stats
 - Export bet history
 
@@ -298,6 +349,18 @@ Accepts multipart form with image file, returns parsed bet data:
       "odds_fractional": "2/1"
     }
   ]
+}
+```
+
+### POST /api/send-push
+Sends push notifications to specified users. Requires Bearer token auth.
+```json
+{
+  "user_ids": ["uuid1", "uuid2"],
+  "title": "BetMates",
+  "body": "Your bet has been settled!",
+  "url": "/league/xxx/bets",
+  "tag": "bet-settled"
 }
 ```
 

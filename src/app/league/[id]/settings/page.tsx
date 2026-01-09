@@ -5,6 +5,7 @@ import { SettingsForm } from "@/components/settings-form";
 import { MembersList } from "@/components/members-list";
 import { SeasonControls } from "@/components/season-controls";
 import { PaymentsTracker } from "@/components/payments-tracker";
+import { SettleBets } from "@/components/settle-bets";
 import { CopyButton } from "@/components/copy-button";
 import { IconArrowLeft } from "@/components/icons";
 
@@ -67,6 +68,29 @@ export default async function SettingsPage({ params }: PageProps) {
     payments = data || [];
   }
 
+  // Get pending bets for settlement
+  let pendingBets: Array<{
+    id: string;
+    user_id: string;
+    stake: number;
+    potential_return: number;
+    placed_at: string;
+    profiles: { display_name: string } | Array<{ display_name: string }>;
+    bet_legs: Array<{ selection: string }>;
+  }> = [];
+  if (currentSeason) {
+    const { data } = await supabase
+      .from("bets")
+      .select(`id, user_id, stake, potential_return, placed_at, profiles!bets_user_id_fkey(display_name), bet_legs(selection)`)
+      .eq("season_id", currentSeason.id)
+      .eq("status", "pending")
+      .order("placed_at", { ascending: false });
+    pendingBets = ((data || []) as typeof pendingBets).map(b => ({
+      ...b,
+      profiles: Array.isArray(b.profiles) ? b.profiles[0] : b.profiles
+    }));
+  }
+
   return (
     <main className="min-h-screen bg-[var(--bg)] safe-t safe-b">
       {/* Header */}
@@ -96,6 +120,26 @@ export default async function SettingsPage({ params }: PageProps) {
             <CopyButton text={league.invite_code} />
           </div>
         </div>
+
+        {/* Settle Bets */}
+        {currentSeason && (
+          <div className="card">
+            <p className="section-header">Settle Bets ({pendingBets.length} pending)</p>
+            <SettleBets
+              bets={pendingBets as Array<{
+                id: string;
+                user_id: string;
+                stake: number;
+                potential_return: number;
+                placed_at: string;
+                profiles: { display_name: string };
+                bet_legs: Array<{ selection: string }>;
+              }>}
+              seasonId={currentSeason.id}
+              leagueId={id}
+            />
+          </div>
+        )}
 
         {/* Payments */}
         {currentSeason && (

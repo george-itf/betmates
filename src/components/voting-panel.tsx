@@ -10,17 +10,17 @@ interface Submission {
   user_id: string;
   selection: string;
   odds_fractional: string;
-  votes: number;
+  votes_count: number;
   profiles: { display_name: string };
 }
 
-export function VotingPanel({ 
-  submissions, 
-  votedIds, 
+export function VotingPanel({
+  submissions,
+  votedIds,
   userId,
   winningCount
-}: { 
-  submissions: Submission[]; 
+}: {
+  submissions: Submission[];
   votedIds: Set<string>;
   userId: string;
   winningCount: number;
@@ -40,10 +40,10 @@ export function VotingPanel({
         .delete()
         .eq("submission_id", submissionId)
         .eq("user_id", userId);
-      
+
       await supabase
         .from("group_bet_submissions")
-        .update({ votes: submissions.find(s => s.id === submissionId)!.votes - 1 })
+        .update({ votes_count: submissions.find(s => s.id === submissionId)!.votes_count - 1 })
         .eq("id", submissionId);
 
       setLocalVoted(prev => {
@@ -55,10 +55,10 @@ export function VotingPanel({
       await supabase
         .from("group_bet_votes")
         .insert({ submission_id: submissionId, user_id: userId });
-      
+
       await supabase
         .from("group_bet_submissions")
-        .update({ votes: submissions.find(s => s.id === submissionId)!.votes + 1 })
+        .update({ votes_count: submissions.find(s => s.id === submissionId)!.votes_count + 1 })
         .eq("id", submissionId);
 
       setLocalVoted(prev => new Set([...prev, submissionId]));
@@ -69,7 +69,7 @@ export function VotingPanel({
   };
 
   // Sort by votes
-  const sorted = [...submissions].sort((a, b) => b.votes - a.votes);
+  const sorted = [...submissions].sort((a, b) => b.votes_count - a.votes_count);
 
   return (
     <div className="space-y-2">
@@ -82,8 +82,8 @@ export function VotingPanel({
         const isOwn = s.user_id === userId;
 
         return (
-          <div 
-            key={s.id} 
+          <div
+            key={s.id}
             className={`flex items-center justify-between p-3 rounded border ${
               isTop ? 'bg-green-50 border-green-200' : 'bg-[var(--bg)] border-[var(--border)]'
             }`}
@@ -96,7 +96,7 @@ export function VotingPanel({
               </p>
             </div>
             <div className="flex items-center gap-3">
-              <span className="text-sm font-semibold">{s.votes}</span>
+              <span className="text-sm font-semibold">{s.votes_count}</span>
               <button
                 onClick={() => toggleVote(s.id)}
                 disabled={loading === s.id}
@@ -105,9 +105,9 @@ export function VotingPanel({
                 {loading === s.id ? "..." : isVoted ? (
                   <>
                     <IconCheck className="w-3 h-3" />
-                    <span>Voted</span>
+                    <span>VOTED</span>
                   </>
-                ) : "Vote"}
+                ) : "VOTE"}
               </button>
             </div>
           </div>

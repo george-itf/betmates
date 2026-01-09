@@ -40,7 +40,7 @@ export default async function GroupBetsPage({ params }: PageProps) {
     id: string;
     title: string;
     status: string;
-    buyin_per_person: number;
+    buyin_per_user: number;
     legs_per_user: number;
     created_at: string;
   }> = [];
@@ -97,16 +97,19 @@ export default async function GroupBetsPage({ params }: PageProps) {
                   <div>
                     <h3 className="font-semibold">{gb.title}</h3>
                     <p className="text-xs text-[var(--text-secondary)]">
-                      £{gb.buyin_per_person} buy-in · {gb.legs_per_user} legs each
+                      £{gb.buyin_per_user} buy-in · {gb.legs_per_user} legs each
                     </p>
                   </div>
                   <span className={`badge ${
-                    gb.status === 'collecting' ? 'badge-yellow' :
-                    gb.status === 'voting' ? 'badge-green' :
-                    gb.status === 'finalized' ? 'badge-gray' :
+                    gb.status === 'submissions_open' ? 'badge-yellow' :
+                    gb.status === 'voting_open' ? 'badge-green' :
+                    gb.status === 'betting' ? 'badge-green' :
                     'badge-gray'
                   }`}>
-                    {gb.status}
+                    {gb.status === 'submissions_open' ? 'OPEN' :
+                     gb.status === 'voting_open' ? 'VOTING' :
+                     gb.status === 'betting' ? 'LIVE' :
+                     gb.status === 'settled' ? 'SETTLED' : gb.status}
                   </span>
                 </div>
               </Link>

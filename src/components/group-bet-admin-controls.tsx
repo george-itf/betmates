@@ -32,7 +32,7 @@ export function GroupBetAdminControls({
     setLoading(true);
     await supabase
       .from("group_bets")
-      .update({ status: "voting" })
+      .update({ status: "voting_open" })
       .eq("id", groupBetId);
     router.refresh();
     setLoading(false);
@@ -40,28 +40,28 @@ export function GroupBetAdminControls({
 
   const finalize = async () => {
     setLoading(true);
-    
+
     // Get top N submissions by votes
     const { data: topSubmissions } = await supabase
       .from("group_bet_submissions")
       .select("id")
       .eq("group_bet_id", groupBetId)
-      .order("votes", { ascending: false })
+      .order("votes_count", { ascending: false })
       .limit(winningCount);
 
     if (topSubmissions) {
-      // Mark them as selected
+      // Mark them as winners
       for (const sub of topSubmissions) {
         await supabase
           .from("group_bet_submissions")
-          .update({ selected: true })
+          .update({ is_winner: true })
           .eq("id", sub.id);
       }
     }
 
     await supabase
       .from("group_bets")
-      .update({ status: "finalized" })
+      .update({ status: "betting" })
       .eq("id", groupBetId);
 
     router.refresh();
@@ -90,7 +90,7 @@ export function GroupBetAdminControls({
 
   return (
     <div className="space-y-3">
-      {status === "collecting" && (
+      {status === "submissions_open" && (
         <>
           <p className="text-sm text-[var(--text-secondary)]">
             {submissionCount} legs submitted so far
@@ -100,7 +100,7 @@ export function GroupBetAdminControls({
             disabled={loading || submissionCount < winningCount}
             className="btn btn-primary w-full"
           >
-            {loading ? "..." : "Open Voting"}
+            {loading ? "..." : "OPEN VOTING"}
           </button>
           {submissionCount < winningCount && (
             <p className="text-xs text-[var(--text-secondary)] text-center">
@@ -110,31 +110,31 @@ export function GroupBetAdminControls({
         </>
       )}
 
-      {status === "voting" && (
+      {status === "voting_open" && (
         <button
           onClick={finalize}
           disabled={loading}
           className="btn btn-primary w-full"
         >
-          {loading ? "..." : "Finalize Acca"}
+          {loading ? "..." : "FINALIZE ACCA"}
         </button>
       )}
 
-      {status === "finalized" && (
+      {status === "betting" && (
         <div className="flex gap-3">
           <button
             onClick={() => settle(false)}
             disabled={loading}
             className="btn btn-danger flex-1"
           >
-            Lost
+            LOST
           </button>
           <button
             onClick={() => settle(true)}
             disabled={loading}
             className="btn btn-primary flex-1"
           >
-            Won
+            WON
           </button>
         </div>
       )}

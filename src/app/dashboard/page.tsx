@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { CreateLeagueButton } from "@/components/create-league-button";
 import { JoinLeagueButton } from "@/components/join-league-button";
+import { PushPrompt } from "@/components/push-prompt";
 import { IconUser } from "@/components/icons";
 
 export default async function DashboardPage() {
@@ -96,6 +97,9 @@ export default async function DashboardPage() {
           <JoinLeagueButton />
         </div>
       </div>
+
+      {/* Push notification prompt */}
+      <PushPrompt />
     </main>
   );
 }
