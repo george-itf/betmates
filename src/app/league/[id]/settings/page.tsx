@@ -6,6 +6,7 @@ import { MembersList } from "@/components/members-list";
 import { SeasonControls } from "@/components/season-controls";
 import { PaymentsTracker } from "@/components/payments-tracker";
 import { CopyButton } from "@/components/copy-button";
+import { IconArrowLeft } from "@/components/icons";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -70,15 +71,18 @@ export default async function SettingsPage({ params }: PageProps) {
     <main className="min-h-screen bg-[var(--bg)] safe-t safe-b">
       {/* Header */}
       <div className="header flex items-center justify-between">
-        <Link href={`/league/${id}`} className="text-[var(--accent)] font-medium">← Back</Link>
-        <h1 className="font-bold">Settings</h1>
+        <Link href={`/league/${id}`} className="flex items-center gap-1 text-[var(--accent)] font-medium text-sm">
+          <IconArrowLeft className="w-4 h-4" />
+          <span>Back</span>
+        </Link>
+        <h1 className="font-bold text-sm uppercase tracking-wide">Settings</h1>
         <div className="w-16" />
       </div>
 
       <div className="p-4 max-w-lg mx-auto space-y-4">
         {/* League settings */}
         <div className="card">
-          <h3 className="font-semibold mb-4">League settings</h3>
+          <p className="section-header">League Settings</p>
           <SettingsForm league={league} />
         </div>
 
@@ -86,8 +90,8 @@ export default async function SettingsPage({ params }: PageProps) {
         <div className="card">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-[var(--text-secondary)]">Invite code</p>
-              <p className="text-2xl font-bold mono">{league.invite_code}</p>
+              <p className="section-header">Invite Code</p>
+              <p className="text-xl font-bold mono tracking-wider">{league.invite_code}</p>
             </div>
             <CopyButton text={league.invite_code} />
           </div>
@@ -96,7 +100,7 @@ export default async function SettingsPage({ params }: PageProps) {
         {/* Payments */}
         {currentSeason && (
           <div className="card">
-            <h3 className="font-semibold mb-4">Week {currentWeek} payments</h3>
+            <p className="section-header">Week {currentWeek} Payments</p>
             <PaymentsTracker
               seasonId={currentSeason.id}
               weekNumber={currentWeek}
@@ -109,13 +113,13 @@ export default async function SettingsPage({ params }: PageProps) {
 
         {/* Members */}
         <div className="card">
-          <h3 className="font-semibold mb-4">Members ({members.length})</h3>
+          <p className="section-header">Members ({members.length})</p>
           <MembersList members={members} leagueId={id} currentUserId={user.id} />
         </div>
 
         {/* Season */}
         <div className="card">
-          <h3 className="font-semibold mb-4">Season</h3>
+          <p className="section-header">Season</p>
           <SeasonControls
             leagueId={id}
             currentSeason={currentSeason || null}

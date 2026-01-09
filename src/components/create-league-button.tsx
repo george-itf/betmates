@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
+import { IconPlus, IconX } from "@/components/icons";
 
 export function CreateLeagueButton() {
   const [open, setOpen] = useState(false);
@@ -48,20 +49,26 @@ export function CreateLeagueButton() {
   return (
     <>
       <button onClick={() => setOpen(true)} className="btn btn-primary flex-1">
-        Create league
+        <IconPlus className="w-4 h-4" />
+        <span>Create</span>
       </button>
 
       {open && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/50" onClick={() => setOpen(false)} />
-          <div className="relative bg-[var(--surface)] rounded-t-2xl sm:rounded-2xl p-6 w-full max-w-md safe-b">
-            <h2 className="text-xl font-bold mb-6">Create a league</h2>
+          <div className="relative bg-[var(--surface)] rounded p-6 w-full max-w-md border border-[var(--border)]">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-lg font-bold">Create League</h2>
+              <button onClick={() => setOpen(false)} className="p-1 text-[var(--text-secondary)]">
+                <IconX className="w-5 h-5" />
+              </button>
+            </div>
             
             <form onSubmit={handleCreate} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium mb-2">League name</label>
+                <label className="block text-xs font-medium mb-2 text-[var(--text-secondary)] uppercase tracking-wide">League Name</label>
                 <input
-                  placeholder="e.g. Sunday League Lads"
+                  placeholder="e.g. Sunday League"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   required
@@ -70,7 +77,7 @@ export function CreateLeagueButton() {
               
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium mb-2">Weekly buy-in</label>
+                  <label className="block text-xs font-medium mb-2 text-[var(--text-secondary)] uppercase tracking-wide">Weekly Buy-in</label>
                   <div className="relative">
                     <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-secondary)]">£</span>
                     <input 
@@ -83,7 +90,7 @@ export function CreateLeagueButton() {
                   </div>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-2">Season length</label>
+                  <label className="block text-xs font-medium mb-2 text-[var(--text-secondary)] uppercase tracking-wide">Season Length</label>
                   <select value={weeks} onChange={(e) => setWeeks(e.target.value)}>
                     <option value="4">4 weeks</option>
                     <option value="6">6 weeks</option>
@@ -93,7 +100,7 @@ export function CreateLeagueButton() {
                 </div>
               </div>
 
-              <div className="flex gap-3 pt-4">
+              <div className="flex gap-3 pt-2">
                 <button type="button" onClick={() => setOpen(false)} className="btn btn-secondary flex-1">
                   Cancel
                 </button>

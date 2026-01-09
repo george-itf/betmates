@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
 import { CopyButton } from "@/components/copy-button";
+import { IconArrowLeft, IconSettings, IconArrowRight, IconPlus } from "@/components/icons";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -80,9 +81,15 @@ export default async function LeaguePage({ params }: PageProps) {
     <main className="min-h-screen bg-[var(--bg)] safe-t pb-24">
       {/* Header */}
       <div className="header flex items-center justify-between">
-        <Link href="/dashboard" className="text-[var(--accent)] font-medium">← Back</Link>
+        <Link href="/dashboard" className="flex items-center gap-1 text-[var(--accent)] font-medium text-sm">
+          <IconArrowLeft className="w-4 h-4" />
+          <span>Back</span>
+        </Link>
         {membership.role === "admin" && (
-          <Link href={`/league/${id}/settings`} className="text-[var(--accent)] font-medium">Settings</Link>
+          <Link href={`/league/${id}/settings`} className="flex items-center gap-1 text-[var(--accent)] font-medium text-sm">
+            <IconSettings className="w-4 h-4" />
+            <span>Settings</span>
+          </Link>
         )}
       </div>
 
@@ -91,29 +98,29 @@ export default async function LeaguePage({ params }: PageProps) {
         <div className="card mb-4">
           <div className="flex items-start justify-between mb-4">
             <div>
-              <h1 className="text-2xl font-bold">{league.name}</h1>
-              <p className="text-[var(--text-secondary)]">Season {season?.season_number || 1} · {daysLeft} days left</p>
+              <h1 className="text-xl font-bold">{league.name}</h1>
+              <p className="text-sm text-[var(--text-secondary)]">Season {season?.season_number || 1} · {daysLeft}d left</p>
             </div>
             <div className="text-right">
-              <p className="text-3xl font-bold text-[var(--accent)]">£{season?.pot_amount || 0}</p>
-              <p className="text-sm text-[var(--text-secondary)]">pot</p>
+              <p className="text-2xl font-bold text-[var(--accent)]">£{season?.pot_amount || 0}</p>
+              <p className="text-xs text-[var(--text-secondary)] uppercase">Pot</p>
             </div>
           </div>
 
           {/* Payment status */}
-          <div className="flex items-center justify-between p-3 bg-[var(--bg)] rounded-lg">
+          <div className="flex items-center justify-between p-3 bg-[var(--bg)] rounded">
             <div>
-              <p className="font-medium">Week {currentWeek} buy-in</p>
-              <p className="text-sm text-[var(--text-secondary)]">£{buyin} per week</p>
+              <p className="font-medium text-sm">Week {currentWeek} buy-in</p>
+              <p className="text-xs text-[var(--text-secondary)]">£{buyin} per week</p>
             </div>
             {hasPaidThisWeek ? (
-              <span className="badge badge-green">Paid ✓</span>
+              <span className="badge badge-green">Paid</span>
             ) : (
               <a
                 href={`https://paypal.me/harbourgate/${buyin}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="btn btn-primary text-sm py-2 px-4"
+                className="btn btn-primary text-xs py-2 px-3"
               >
                 Pay £{buyin}
               </a>
@@ -125,8 +132,8 @@ export default async function LeaguePage({ params }: PageProps) {
         <div className="card mb-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-[var(--text-secondary)]">Invite code</p>
-              <p className="text-xl font-bold mono">{league.invite_code}</p>
+              <p className="section-header">Invite Code</p>
+              <p className="text-xl font-bold mono tracking-wider">{league.invite_code}</p>
             </div>
             <CopyButton text={league.invite_code} />
           </div>
@@ -134,23 +141,23 @@ export default async function LeaguePage({ params }: PageProps) {
 
         {/* Leaderboard */}
         <div className="card mb-4">
-          <h2 className="font-bold mb-3">Leaderboard</h2>
+          <p className="section-header">Leaderboard</p>
           {leaderboard.length > 0 ? (
-            <div className="space-y-1">
+            <div>
               {leaderboard.map((entry, i) => (
-                <div key={entry.user_id} className="list-item py-3">
+                <div key={entry.user_id} className="list-item">
                   <div className="flex items-center gap-3">
-                    <span className={`w-6 h-6 rounded-full flex items-center justify-center text-sm font-bold ${
-                      i === 0 ? 'bg-yellow-400 text-yellow-900' : 
-                      i === 1 ? 'bg-gray-300 text-gray-700' : 
-                      i === 2 ? 'bg-orange-300 text-orange-900' : 
+                    <span className={`w-6 h-6 flex items-center justify-center text-xs font-bold rounded ${
+                      i === 0 ? 'bg-yellow-100 text-yellow-700' : 
+                      i === 1 ? 'bg-gray-100 text-gray-600' : 
+                      i === 2 ? 'bg-orange-100 text-orange-700' : 
                       'bg-[var(--bg)] text-[var(--text-secondary)]'
                     }`}>
                       {i + 1}
                     </span>
                     <span className={entry.user_id === user.id ? "font-semibold" : ""}>
                       {entry.display_name}
-                      {entry.user_id === user.id && <span className="text-[var(--text-secondary)]"> (you)</span>}
+                      {entry.user_id === user.id && <span className="text-[var(--text-secondary)] text-sm"> (you)</span>}
                     </span>
                   </div>
                   <span className={`font-semibold ${entry.profit >= 0 ? "text-[var(--accent)]" : "text-[var(--danger)]"}`}>
@@ -160,29 +167,29 @@ export default async function LeaguePage({ params }: PageProps) {
               ))}
             </div>
           ) : (
-            <p className="text-[var(--text-secondary)] text-center py-6">No bets yet</p>
+            <p className="text-[var(--text-secondary)] text-center py-6 text-sm">No bets yet</p>
           )}
         </div>
 
         {/* Recent bets */}
         <div className="card mb-4">
-          <h2 className="font-bold mb-3">Recent bets</h2>
+          <p className="section-header">Recent Bets</p>
           {bets.length > 0 ? (
-            <div className="space-y-1">
+            <div>
               {bets.map((bet) => {
                 const profile = Array.isArray(bet.profiles) ? bet.profiles[0] : bet.profiles;
                 const profit = bet.status === "settled" ? (bet.actual_return || 0) - bet.stake : 0;
                 return (
-                  <div key={bet.id} className="list-item py-3">
+                  <div key={bet.id} className="list-item">
                     <div className="flex-1 min-w-0">
-                      <p className="font-medium">{profile?.display_name}</p>
-                      <p className="text-sm text-[var(--text-secondary)] truncate">
+                      <p className="font-medium text-sm">{profile?.display_name}</p>
+                      <p className="text-xs text-[var(--text-secondary)] truncate">
                         {bet.bet_legs.map((l) => l.selection).join(" · ")}
                       </p>
                     </div>
                     <div className="text-right ml-3">
                       {bet.status === "settled" ? (
-                        <span className={`font-semibold ${profit >= 0 ? "text-[var(--accent)]" : "text-[var(--danger)]"}`}>
+                        <span className={`font-semibold text-sm ${profit >= 0 ? "text-[var(--accent)]" : "text-[var(--danger)]"}`}>
                           {profit >= 0 ? "+" : ""}£{profit.toFixed(2)}
                         </span>
                       ) : (
@@ -194,17 +201,17 @@ export default async function LeaguePage({ params }: PageProps) {
               })}
             </div>
           ) : (
-            <p className="text-[var(--text-secondary)] text-center py-6">No bets yet</p>
+            <p className="text-[var(--text-secondary)] text-center py-6 text-sm">No bets yet</p>
           )}
         </div>
 
         {/* Group bets link */}
-        <Link href={`/league/${id}/group-bet`} className="card flex items-center justify-between mb-4">
+        <Link href={`/league/${id}/group-bet`} className="card flex items-center justify-between">
           <div>
-            <p className="font-bold">Group bets</p>
-            <p className="text-sm text-[var(--text-secondary)]">Vote on legs, share the pot</p>
+            <p className="font-semibold text-sm">Group Bets</p>
+            <p className="text-xs text-[var(--text-secondary)]">Vote on legs, share the pot</p>
           </div>
-          <span className="text-[var(--accent)] text-xl">→</span>
+          <IconArrowRight className="w-5 h-5 text-[var(--text-secondary)]" />
         </Link>
       </div>
 
@@ -213,9 +220,10 @@ export default async function LeaguePage({ params }: PageProps) {
         <div className="bottom-fixed">
           <Link
             href={`/league/${id}/bet/new?season=${season.id}`}
-            className="btn btn-primary w-full text-lg"
+            className="btn btn-primary w-full"
           >
-            + Add bet
+            <IconPlus className="w-4 h-4" />
+            <span>Add Bet</span>
           </Link>
         </div>
       )}

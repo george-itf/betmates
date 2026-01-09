@@ -42,19 +42,19 @@ export default function LoginPage() {
     <main className="min-h-screen flex flex-col safe-t safe-b bg-[var(--bg)]">
       {/* Header */}
       <div className="header">
-        <Link href="/" className="text-xl font-bold text-[var(--accent)]">betmates</Link>
+        <Link href="/" className="text-lg font-bold tracking-tight">BETMATES</Link>
       </div>
 
       <div className="flex-1 flex items-center justify-center px-6 py-12">
         <div className="w-full max-w-sm">
           <div className="card">
-            <h1 className="text-xl font-bold mb-6">
-              {mode === "signin" ? "Welcome back" : "Create account"}
+            <h1 className="text-lg font-bold mb-6">
+              {mode === "signin" ? "Sign In" : "Create Account"}
             </h1>
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium mb-2">Email</label>
+                <label className="block text-xs font-medium mb-2 text-[var(--text-secondary)] uppercase tracking-wide">Email</label>
                 <input
                   type="email"
                   value={email}
@@ -66,12 +66,12 @@ export default function LoginPage() {
               </div>
               
               <div>
-                <label className="block text-sm font-medium mb-2">Password</label>
+                <label className="block text-xs font-medium mb-2 text-[var(--text-secondary)] uppercase tracking-wide">Password</label>
                 <input
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
+                  placeholder="Min 6 characters"
                   required
                   disabled={loading}
                   minLength={6}
@@ -79,13 +79,13 @@ export default function LoginPage() {
               </div>
 
               {error && (
-                <div className="p-3 rounded-lg bg-red-50 text-[var(--danger)] text-sm">
+                <div className="p-3 rounded bg-red-50 text-[var(--danger)] text-sm">
                   {error}
                 </div>
               )}
 
               <button type="submit" disabled={loading} className="btn btn-primary w-full">
-                {loading ? "Please wait..." : mode === "signin" ? "Sign in" : "Create account"}
+                {loading ? "Please wait..." : mode === "signin" ? "Sign In" : "Create Account"}
               </button>
             </form>
 

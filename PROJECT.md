@@ -1,97 +1,198 @@
-# BetMates - PWA Betting League Tracker
+# BetMates - Betting League Tracker
 
-## Project Overview
+## Overview
 
-A PWA for tracking bets with friends in a competitive league format. Think fantasy football but for betting.
+A web app for tracking bets with friends in a competitive league format. Weekly buy-ins, seasonal competitions, winner takes the pot.
 
-### Core Features
-- Weekly £5 buy-in tracked per user
-- 6-week seasons, winner takes the pot
-- Screenshot parsing (Paddy Power) via Claude Vision API
-- Leaderboard with real-time rankings
-- Group bet feature: submit legs → vote → combined acca → split winnings
-- League admin customisation
+**Live URL:** https://betmates.vercel.app
 
 ---
 
 ## Tech Stack
 
-| Layer | Choice | Reason |
-|-------|--------|--------|
-| Frontend | Next.js 14 (App Router) | PWA-ready, good iOS support |
-| Backend/DB | Supabase | Auth, Postgres, real-time, storage |
-| Screenshot OCR | Claude Vision API | Understands context, not just OCR |
-| Hosting | Vercel | Free tier, instant deploys |
-| Styling | Tailwind CSS | Fast, dark theme with #2d2d2d |
+| Layer | Technology |
+|-------|------------|
+| Frontend | Next.js 15 (App Router) |
+| Backend/DB | Supabase (Postgres, Auth, Storage) |
+| Screenshot OCR | Claude Vision API |
+| Hosting | Vercel |
+| Styling | Tailwind CSS 4 |
+| Payments | PayPal.me (manual tracking) |
 
 ---
 
-## Build Steps & Status
+## Features
 
-| Step | Task | Est. Time | Status |
-|------|------|-----------|--------|
-| 1 | Supabase setup | 1 hr | ✅ DONE |
-| 2 | Data model & schema | 2 hrs | ✅ DONE |
-| 3 | PWA shell | 1.5 hrs | ✅ DONE |
-| 4 | Auth flow | 2 hrs | ✅ DONE |
-| 5 | Screenshot parser | 3 hrs | ✅ DONE |
-| 6 | Bet submission & history | 3 hrs | ✅ DONE |
-| 7 | Leaderboard & pot tracker | 3 hrs | ✅ DONE |
-| 8 | Group bet feature | 5 hrs | ✅ DONE |
-| 9 | Admin panel | 3 hrs | ✅ DONE |
-| 10 | Deploy & polish | 2 hrs | ⏳ NOT STARTED |
+### User Features
+- Sign up / sign in with email + password
+- Edit profile (display name)
+- Create league with custom settings
+- Join league with 6-character invite code
+- View dashboard with all leagues
+- View league (leaderboard, recent bets, pot total)
+- Add bet via screenshot upload (AI parsing)
+- Add bet manually (stake, returns, selections)
+- Weekly buy-in tracking with PayPal integration
+- Submit legs to group bets
+- Vote on group bet selections
+
+### Admin Features
+- Edit league name and weekly buy-in
+- View and copy invite code
+- Track weekly payments per member
+- Mark members as paid (updates pot)
+- Promote/demote/kick members
+- End season and declare winner
+- Start new season
+- Create and manage group bets
 
 ---
 
-## Current File Structure
+## Database Schema
+
+### Tables
+
+**profiles**
+- id (uuid, FK to auth.users)
+- display_name (text)
+- avatar_url (text, nullable)
+- created_at (timestamp)
+
+**leagues**
+- id (uuid)
+- name (text)
+- invite_code (text, unique, default random 6 chars)
+- weekly_buyin (numeric, default 5)
+- season_length_weeks (int, default 6)
+- group_bet_buyin (numeric, default 2)
+- group_bet_legs_per_user (int, default 4)
+- group_bet_winning_legs (int, default 5)
+- created_by (uuid, FK to profiles)
+- created_at (timestamp)
+
+**league_members**
+- id (uuid)
+- league_id (uuid, FK)
+- user_id (uuid, FK)
+- role (text: 'admin' or 'member')
+- joined_at (timestamp)
+
+**seasons**
+- id (uuid)
+- league_id (uuid, FK)
+- season_number (int)
+- starts_at (timestamp)
+- ends_at (timestamp)
+- status (text: 'active', 'completed')
+- pot_amount (numeric, default 0)
+- winner_id (uuid, FK, nullable)
+
+**bets**
+- id (uuid)
+- user_id (uuid, FK)
+- season_id (uuid, FK)
+- bet_type (text: 'single', 'double', 'treble', 'acca')
+- stake (numeric)
+- potential_return (numeric)
+- actual_return (numeric, nullable)
+- status (text: 'pending', 'won', 'lost', 'settled')
+- screenshot_url (text, nullable)
+- placed_at (timestamp)
+
+**bet_legs**
+- id (uuid)
+- bet_id (uuid, FK)
+- selection (text)
+- odds_decimal (numeric)
+- odds_fractional (text)
+- result (text: 'pending', 'won', 'lost')
+
+**payments**
+- id (uuid)
+- season_id (uuid, FK)
+- user_id (uuid, FK)
+- week_number (int)
+- amount (numeric)
+- status (text: 'pending', 'paid')
+- paid_at (timestamp)
+- unique constraint on (season_id, user_id, week_number)
+
+**group_bets**
+- id (uuid)
+- season_id (uuid, FK)
+- title (text)
+- buyin_per_person (numeric)
+- legs_per_user (int)
+- winning_leg_count (int)
+- status (text: 'collecting', 'voting', 'finalized', 'settled')
+- created_by (uuid, FK)
+- created_at (timestamp)
+
+**group_bet_submissions**
+- id (uuid)
+- group_bet_id (uuid, FK)
+- user_id (uuid, FK)
+- selection (text)
+- odds_fractional (text)
+- odds_decimal (numeric)
+- votes (int, default 0)
+- selected (boolean, default false)
+- submitted_at (timestamp)
+
+**group_bet_votes**
+- id (uuid)
+- submission_id (uuid, FK)
+- user_id (uuid, FK)
+- unique constraint on (submission_id, user_id)
+
+### RLS Policies (Simplified)
+
+All tables have RLS enabled with permissive policies:
+- SELECT: true (authenticated users can read)
+- INSERT: auth.uid() = user_id or created_by
+- UPDATE/DELETE: owner or admin check
+
+---
+
+## File Structure
 
 ```
 betmates/
 ├── PROJECT.md
-├── .env.local (configured)
+├── .env.local
 ├── package.json
+├── next.config.ts
+├── tailwind.config.ts
 ├── public/
 │   ├── manifest.json
-│   ├── sw.js
 │   └── icons/
 ├── src/
 │   ├── app/
 │   │   ├── layout.tsx
-│   │   ├── page.tsx (landing)
+│   │   ├── page.tsx
 │   │   ├── globals.css
 │   │   ├── login/page.tsx
 │   │   ├── auth/callback/route.ts
 │   │   ├── dashboard/page.tsx
 │   │   ├── profile/page.tsx
 │   │   ├── league/[id]/
-│   │   │   ├── page.tsx (league view)
-│   │   │   ├── settings/page.tsx (admin panel)
-│   │   │   ├── bet/new/page.tsx (add bet)
+│   │   │   ├── page.tsx
+│   │   │   ├── settings/page.tsx
+│   │   │   ├── bet/new/page.tsx
 │   │   │   └── group-bet/
-│   │   │       ├── page.tsx (list group bets)
-│   │   │       └── [groupBetId]/page.tsx (group bet detail)
+│   │   │       ├── page.tsx
+│   │   │       └── [groupBetId]/page.tsx
 │   │   └── api/
 │   │       └── parse-screenshot/route.ts
 │   ├── components/
-│   │   ├── league-card.tsx
+│   │   ├── copy-button.tsx
 │   │   ├── create-league-button.tsx
 │   │   ├── join-league-button.tsx
-│   │   ├── league-header.tsx
-│   │   ├── leaderboard.tsx
-│   │   ├── recent-bets.tsx
-│   │   ├── add-bet-button.tsx
-│   │   ├── create-group-bet-button.tsx
-│   │   ├── submit-legs-form.tsx
-│   │   ├── voting-panel.tsx
-│   │   ├── group-bet-result.tsx
-│   │   ├── group-bet-admin-controls.tsx
-│   │   ├── league-settings-form.tsx
 │   │   ├── members-list.tsx
-│   │   ├── season-controls.tsx
-│   │   ├── danger-zone.tsx
-│   │   ├── copy-button.tsx
-│   │   ├── regenerate-code-button.tsx
+│   │   ├── payments-tracker.tsx
 │   │   ├── profile-form.tsx
+│   │   ├── season-controls.tsx
+│   │   ├── settings-form.tsx
 │   │   └── sign-out-button.tsx
 │   ├── lib/
 │   │   └── supabase/
@@ -99,148 +200,171 @@ betmates/
 │   │       ├── server.ts
 │   │       └── middleware.ts
 │   └── middleware.ts
-└── supabase/
-    ├── schema.sql (applied)
-    └── group_bet_functions.sql (NEEDS APPLYING)
 ```
-
----
-
-## Progress Log
-
-### Session 1 - 2025-01-09
-- Created project, data model, schema
-- Scaffolded Next.js with PWA + auth
-
-### Session 2 - 2025-01-09
-- Applied schema, dashboard, league view
-- Screenshot parsing, bet submission
-
-### Session 3 - 2025-01-09
-- Complete group bet feature
-- Submissions, voting, finalization, settlement
-
-### Session 4 - 2025-01-09 (current)
-
-**Completed:**
-1. Full admin panel with:
-   - League settings (name, buy-in, season length)
-   - Group bet defaults (buy-in, legs per user, winning legs)
-   - Invite code management (view, copy, regenerate)
-   - Member management (view, promote, demote, kick)
-   - Season controls (view current, end season, declare winner, start new)
-   - Danger zone (delete league with confirmation)
-2. Profile page with:
-   - Edit display name
-   - Sign out button
-
----
-
-## NEXT ACTIONS
-
-### Before testing:
-1. **Apply group_bet_functions.sql** to Supabase:
-   - Go to SQL Editor → paste contents → Run
-
-### Ready for deploy:
-1. Push to GitHub
-2. Connect to Vercel
-3. Add environment variables
-4. Deploy!
-
----
-
-## Admin Panel Features
-
-### League Settings
-- Edit league name
-- Change weekly buy-in amount
-- Change season length
-- Set group bet defaults (buy-in, legs per user, winning count)
-
-### Invite Code
-- View current code
-- Copy to clipboard
-- Regenerate new code (invalidates old)
-
-### Members
-- View all members with join date
-- See who is admin
-- Promote member to admin
-- Demote admin to member (if multiple admins)
-- Kick member from league
-
-### Season
-- View current season info (pot, dates, time remaining)
-- End season and declare winner
-- Start new season
-- View past seasons with winners
-
-### Danger Zone
-- Delete league permanently
-- Requires typing league name to confirm
 
 ---
 
 ## Environment Variables
 
 ```env
-# Supabase (✅ configured)
 NEXT_PUBLIC_SUPABASE_URL=https://wtgjziuwwmpuzjrxqitj.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGc...
-
-# Claude API (✅ configured)
 ANTHROPIC_API_KEY=sk-ant-...
 ```
 
 ---
 
-## Complete Feature List
+## Deployment
 
-### User Features
-- [x] Sign up / sign in with magic link
-- [x] Edit profile (display name)
-- [x] Sign out
-- [x] Create league
-- [x] Join league with invite code
-- [x] View dashboard with all leagues
-- [x] View league (leaderboard, recent bets, pot)
-- [x] Add bet via screenshot
-- [x] Add bet manually
-- [x] Submit legs to group bet
-- [x] Vote on group bet legs
+### Vercel Setup
+1. Connect GitHub repo to Vercel
+2. Add environment variables in Vercel dashboard
+3. Auto-deploys on push to main
 
-### Admin Features
-- [x] Edit league settings
-- [x] Manage invite code
-- [x] View/promote/demote/kick members
-- [x] End season and declare winner
-- [x] Start new season
-- [x] Create group bets
-- [x] Transition group bet status
-- [x] Settle group bets (won/lost)
-- [x] Delete league
+### Supabase Setup
+1. Create project at supabase.com
+2. Run schema SQL in SQL Editor
+3. Configure auth: Email provider, disable "Confirm email"
+4. Create storage bucket "screenshots" (public)
+
+---
+
+## Session Log
+
+### Session 1
+- Project setup, data model design
+- Supabase schema creation
+- Next.js scaffolding with Tailwind
+
+### Session 2
+- Auth flow (originally magic link)
+- Dashboard and league views
+- Screenshot parsing API with Claude Vision
+- Bet submission (upload + manual)
+
+### Session 3
+- Group bet feature (submissions, voting, finalization)
+- Leaderboard with profit tracking
+- Season management
+
+### Session 4
+- Admin panel (settings, members, seasons)
+- Profile page
+- Initial Vercel deployment
+
+### Session 5
+- TypeScript fixes (profiles array flattening)
+- RLS policy debugging and fixes
+- Switched from magic link to password auth (SMTP issues)
+- PayPal.me integration for payments
+- Payment tracking by admin
+- UI overhaul: dark hacker theme to clean light theme
+- Server/client component fixes (onClick handlers)
+- Comprehensive testing and bug fixes
+
+---
+
+## Known Issues / TODO
+
+### Pending
+- Group bet SQL functions need to be run in Supabase:
+  - increment_votes
+  - decrement_votes
+  - transition_to_voting
+  - finalize_group_bet
+- PWA icons returning 404 (need to add icon files)
+
+### Future Enhancements
+- Custom domain
+- Push notifications for bet results
+- Settle individual bets feature
+- Historical season stats
+- Export bet history
+
+---
+
+## API Endpoints
+
+### POST /api/parse-screenshot
+Accepts multipart form with image file, returns parsed bet data:
+```json
+{
+  "stake": 5.00,
+  "potential_return": 25.00,
+  "status": "pending",
+  "legs": [
+    {
+      "selection": "Arsenal to win",
+      "odds_fractional": "2/1"
+    }
+  ]
+}
+```
+
+---
+
+## Database Functions
+
+### get_season_leaderboard(p_season_id uuid)
+Returns leaderboard data for a season:
+```sql
+SELECT user_id, display_name, profit
+ORDER BY profit DESC
+```
+
+### Group Bet Functions (to be applied)
+- increment_votes(submission_id)
+- decrement_votes(submission_id)
+- transition_to_voting(group_bet_id)
+- finalize_group_bet(group_bet_id)
+
+---
+
+## Design System
+
+### Colors
+- Background: #f5f5f5
+- Surface: #ffffff
+- Border: #e5e5e5
+- Text: #1a1a1a
+- Text Secondary: #666666
+- Accent (green): #1e8e3e
+- Danger (red): #d93025
+- Warning (yellow): #f9a825
+
+### Components
+- .card - White background, 12px radius, subtle shadow
+- .btn - 12px padding, 8px radius, 600 weight
+- .btn-primary - Green background, white text
+- .btn-secondary - White background, border
+- .badge - Pill shape, colored backgrounds
+- .list-item - Flex row with bottom border
 
 ---
 
 ## Testing Checklist
 
-- [ ] Sign up with email
-- [ ] Edit display name
-- [ ] Create a league
-- [ ] Share invite code
-- [ ] Join league with code
+- [x] Sign up with email/password
+- [x] Sign in with email/password
+- [x] Edit display name
+- [x] Create a league
+- [x] View invite code
+- [x] Copy invite code
+- [x] Join league with code
 - [ ] Add bet via screenshot
-- [ ] Add bet manually
-- [ ] View leaderboard
-- [ ] Create group bet (admin)
+- [x] Add bet manually
+- [x] View leaderboard
+- [x] View recent bets
+- [x] Pay via PayPal link
+- [x] Admin: mark payment as paid
+- [x] Admin: edit league settings
+- [x] Admin: view members
+- [ ] Admin: promote/demote members
+- [ ] Admin: kick member
+- [ ] Admin: end season
+- [ ] Admin: start new season
+- [ ] Create group bet
 - [ ] Submit legs to group bet
 - [ ] Vote on legs
 - [ ] Finalize group bet
-- [ ] Settle group bet
-- [ ] Edit league settings (admin)
-- [ ] Promote/demote members (admin)
-- [ ] Kick member (admin)
-- [ ] End season (admin)
-- [ ] Start new season (admin)
-- [ ] Sign out
+- [x] Sign out

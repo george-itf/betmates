@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
+import { IconCheck } from "@/components/icons";
 
 interface Member {
   user_id: string;
@@ -71,24 +72,29 @@ export function PaymentsTracker({ seasonId, weekNumber, members, payments, buyin
   return (
     <div>
       {/* Summary */}
-      <div className="flex justify-between items-center p-3 bg-[var(--bg)] rounded-lg mb-4">
-        <span className="font-medium">{paidCount}/{members.length} paid</span>
+      <div className="flex justify-between items-center p-3 bg-[var(--bg)] rounded mb-4">
+        <span className="font-medium text-sm">{paidCount}/{members.length} paid</span>
         <span className="text-[var(--accent)] font-bold">£{totalPaid} / £{totalExpected}</span>
       </div>
 
       {/* Members */}
-      <div className="space-y-1">
+      <div>
         {members.map((m) => {
           const isPaid = paidUserIds.has(m.user_id);
           return (
             <div key={m.user_id} className="list-item">
-              <span>{m.profiles?.display_name}</span>
+              <span className="text-sm">{m.profiles?.display_name}</span>
               <button
                 onClick={() => togglePayment(m.user_id)}
                 disabled={loading === m.user_id}
-                className={`btn text-sm py-1 px-3 ${isPaid ? "btn-primary" : "btn-secondary"}`}
+                className={`btn text-xs py-1 px-3 ${isPaid ? "btn-primary" : "btn-secondary"}`}
               >
-                {loading === m.user_id ? "..." : isPaid ? "Paid ✓" : "Mark paid"}
+                {loading === m.user_id ? "..." : isPaid ? (
+                  <>
+                    <IconCheck className="w-3 h-3" />
+                    <span>Paid</span>
+                  </>
+                ) : "Mark Paid"}
               </button>
             </div>
           );

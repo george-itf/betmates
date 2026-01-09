@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
+import { IconUsers, IconX } from "@/components/icons";
 
 export function JoinLeagueButton() {
   const [open, setOpen] = useState(false);
@@ -53,34 +54,40 @@ export function JoinLeagueButton() {
   return (
     <>
       <button onClick={() => setOpen(true)} className="btn btn-secondary flex-1">
-        Join league
+        <IconUsers className="w-4 h-4" />
+        <span>Join</span>
       </button>
 
       {open && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/50" onClick={() => setOpen(false)} />
-          <div className="relative bg-[var(--surface)] rounded-t-2xl sm:rounded-2xl p-6 w-full max-w-md safe-b">
-            <h2 className="text-xl font-bold mb-6">Join a league</h2>
+          <div className="relative bg-[var(--surface)] rounded p-6 w-full max-w-md border border-[var(--border)]">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-lg font-bold">Join League</h2>
+              <button onClick={() => setOpen(false)} className="p-1 text-[var(--text-secondary)]">
+                <IconX className="w-5 h-5" />
+              </button>
+            </div>
             
             <form onSubmit={handleJoin} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium mb-2">Invite code</label>
+                <label className="block text-xs font-medium mb-2 text-[var(--text-secondary)] uppercase tracking-wide">Invite Code</label>
                 <input
                   placeholder="e.g. abc123"
                   value={code}
                   onChange={(e) => setCode(e.target.value)}
                   required
-                  className="mono text-center text-xl tracking-widest"
+                  className="mono text-center text-xl tracking-widest uppercase"
                 />
               </div>
 
               {error && (
-                <div className="p-3 rounded-lg bg-red-50 text-[var(--danger)] text-sm">
+                <div className="p-3 rounded bg-red-50 text-[var(--danger)] text-sm">
                   {error}
                 </div>
               )}
 
-              <div className="flex gap-3 pt-4">
+              <div className="flex gap-3 pt-2">
                 <button type="button" onClick={() => setOpen(false)} className="btn btn-secondary flex-1">
                   Cancel
                 </button>

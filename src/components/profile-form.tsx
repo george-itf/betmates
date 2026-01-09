@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
+import { IconCheck } from "@/components/icons";
 
 export function ProfileForm({ userId, currentName }: { userId: string; currentName: string }) {
   const [name, setName] = useState(currentName);
@@ -36,7 +37,12 @@ export function ProfileForm({ userId, currentName }: { userId: string; currentNa
         disabled={loading || !name.trim() || name === currentName}
         className="btn btn-primary w-full"
       >
-        {loading ? "Saving..." : saved ? "Saved ✓" : "Save changes"}
+        {loading ? "Saving..." : saved ? (
+          <>
+            <IconCheck className="w-4 h-4" />
+            <span>Saved</span>
+          </>
+        ) : "Save Changes"}
       </button>
     </form>
   );

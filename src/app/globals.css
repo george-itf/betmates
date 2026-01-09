@@ -3,9 +3,9 @@
 :root {
   --bg: #f5f5f5;
   --surface: #ffffff;
-  --border: #e5e5e5;
+  --border: #e0e0e0;
   --text: #1a1a1a;
-  --text-secondary: #666666;
+  --text-secondary: #5f6368;
   --accent: #1e8e3e;
   --accent-hover: #167c32;
   --danger: #d93025;
@@ -32,19 +32,19 @@ html, body {
   .safe-b { padding-bottom: env(safe-area-inset-bottom); }
 }
 
-/* Cards */
+/* Cards - more square */
 .card {
   background: var(--surface);
-  border-radius: 12px;
+  border-radius: 4px;
   padding: 16px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  border: 1px solid var(--border);
 }
 
-/* Inputs */
+/* Inputs - square */
 input, select, textarea {
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: 4px;
   padding: 12px 14px;
   color: var(--text);
   font-size: 16px;
@@ -60,23 +60,26 @@ input:disabled { opacity: 0.6; background: var(--bg); }
 
 select {
   appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%235f6368' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: right 12px center;
 }
 
-/* Buttons */
+/* Buttons - square */
 .btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  gap: 8px;
   padding: 12px 20px;
-  border-radius: 8px;
-  font-size: 15px;
+  border-radius: 4px;
+  font-size: 14px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.15s;
   border: none;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .btn-primary {
@@ -102,7 +105,7 @@ select {
 a { color: inherit; text-decoration: none; }
 
 /* Utilities */
-.mono { font-family: ui-monospace, "SF Mono", monospace; }
+.mono { font-family: ui-monospace, "SF Mono", SFMono-Regular, monospace; }
 .text-secondary { color: var(--text-secondary); }
 .text-accent { color: var(--accent); }
 .text-danger { color: var(--danger); }
@@ -112,7 +115,7 @@ a { color: inherit; text-decoration: none; }
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 14px 0;
+  padding: 12px 0;
   border-bottom: 1px solid var(--border);
 }
 .list-item:last-child { border-bottom: none; }
@@ -139,16 +142,35 @@ a { color: inherit; text-decoration: none; }
   border-top: 1px solid var(--border);
 }
 
-/* Badge */
+/* Badge - square */
 .badge {
   display: inline-flex;
   align-items: center;
-  padding: 4px 10px;
-  border-radius: 100px;
-  font-size: 13px;
-  font-weight: 500;
+  padding: 4px 8px;
+  border-radius: 2px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 .badge-green { background: #e6f4ea; color: #1e8e3e; }
 .badge-yellow { background: #fef7e0; color: #b36200; }
 .badge-red { background: #fce8e6; color: #c5221f; }
 .badge-gray { background: #f1f3f4; color: #5f6368; }
+
+/* Icons */
+.icon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+/* Section headers */
+.section-header {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-secondary);
+  margin-bottom: 12px;
+}
