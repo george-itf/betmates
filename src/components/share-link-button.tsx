@@ -27,8 +27,8 @@ export function ShareLinkButton({ inviteCode }: { inviteCode: string }) {
     if (navigator.share) {
       try {
         await navigator.share({
-          title: "Join my BetMates league",
-          text: "Join my betting league on BetMates!",
+          title: "Join my MatchPool league",
+          text: "Join my betting league on MatchPool!",
           url: shareUrl,
         });
         return;

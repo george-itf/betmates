@@ -5,13 +5,13 @@ import "./globals.css";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "BetMates",
+  title: "MatchPool",
   description: "Track bets with your mates",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "BetMates",
+    title: "MatchPool",
   },
   icons: {
     icon: [

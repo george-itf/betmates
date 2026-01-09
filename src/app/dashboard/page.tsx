@@ -45,7 +45,7 @@ export default async function DashboardPage() {
     <main className="min-h-screen bg-[var(--bg)] safe-t safe-b">
       {/* Header */}
       <div className="header flex items-center justify-between">
-        <h1 className="text-lg font-bold tracking-tight">BETMATES</h1>
+        <h1 className="text-lg font-bold tracking-tight">MATCHPOOL</h1>
         <Link href="/profile" className="flex items-center gap-2 text-sm text-[var(--text-secondary)]">
           <IconUser className="icon" />
           <span>{profile?.display_name || "Profile"}</span>

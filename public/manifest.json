@@ -1,6 +1,6 @@
 {
-  "name": "BetMates",
-  "short_name": "BetMates",
+  "name": "MatchPool",
+  "short_name": "MatchPool",
   "description": "Track bets with your mates",
   "start_url": "/dashboard",
   "display": "standalone",

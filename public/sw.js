@@ -1,4 +1,4 @@
-const CACHE_NAME = 'betmates-v2'
+const CACHE_NAME = 'matchpool-v1'
 
 // Install event
 self.addEventListener('install', (event) => {
@@ -76,7 +76,7 @@ self.addEventListener('push', (event) => {
   }
 
   event.waitUntil(
-    self.registration.showNotification(data.title || 'BetMates', options)
+    self.registration.showNotification(data.title || 'MatchPool', options)
   )
 })
 

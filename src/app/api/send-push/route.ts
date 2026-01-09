@@ -8,7 +8,7 @@ const vapidPrivateKey = process.env.VAPID_PRIVATE_KEY;
 
 if (vapidPublicKey && vapidPrivateKey) {
   webpush.setVapidDetails(
-    "mailto:admin@betmates.app",
+    "mailto:admin@matchpool.app",
     vapidPublicKey,
     vapidPrivateKey
   );
@@ -64,7 +64,7 @@ export async function POST(request: NextRequest) {
 
     // Send notifications
     const payload = JSON.stringify({
-      title: title || "BetMates",
+      title: title || "MatchPool",
       body: messageBody || "",
       url: url || "/dashboard",
       tag: tag || "default",

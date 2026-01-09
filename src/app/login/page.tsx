@@ -42,7 +42,7 @@ export default function LoginPage() {
     <main className="min-h-screen flex flex-col safe-t safe-b bg-[var(--bg)]">
       {/* Header */}
       <div className="header">
-        <Link href="/" className="text-lg font-bold tracking-tight">BETMATES</Link>
+        <Link href="/" className="text-lg font-bold tracking-tight">MATCHPOOL</Link>
       </div>
 
       <div className="flex-1 flex items-center justify-center px-6 py-12">

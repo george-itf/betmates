@@ -1,10 +1,10 @@
-# BetMates - Betting League Tracker
+# MatchPool - Betting League Tracker
 
 ## Overview
 
 A web app for tracking bets with friends in a competitive league format. Weekly buy-ins, seasonal competitions, winner takes the pot.
 
-**Live URL:** https://betmates.vercel.app
+**Live URL:** https://betmates.vercel.app (soon to be matchpool.app)
 
 ---
 

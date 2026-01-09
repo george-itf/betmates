@@ -7,7 +7,7 @@ export default function Home() {
         <div className="w-full max-w-sm">
           {/* Logo */}
           <div className="text-center mb-10">
-            <h1 className="text-2xl font-bold tracking-tight">BETMATES</h1>
+            <h1 className="text-2xl font-bold tracking-tight">MATCHPOOL</h1>
             <p className="text-[var(--text-secondary)] mt-2">Track bets with your mates</p>
           </div>
 
