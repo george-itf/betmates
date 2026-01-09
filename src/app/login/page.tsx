@@ -2,36 +2,49 @@
 
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [sent, setSent] = useState(false);
   const [error, setError] = useState("");
+  const [mode, setMode] = useState<"signin" | "signup">("signin");
 
   const supabase = createClient();
+  const router = useRouter();
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError("");
 
     try {
-      const { error: authError } = await supabase.auth.signInWithOtp({
-        email,
-        options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
-      });
-
-      if (authError) {
-        // Log full error for debugging
-        console.error("Auth error:", authError);
-        setError(authError.message || JSON.stringify(authError) || "Failed to send link");
+      if (mode === "signup") {
+        const { error: signUpError } = await supabase.auth.signUp({
+          email,
+          password,
+        });
+        if (signUpError) throw signUpError;
+        // Auto sign in after signup
+        const { error: signInError } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+        if (signInError) throw signInError;
       } else {
-        setSent(true);
+        const { error: signInError } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+        if (signInError) throw signInError;
       }
+      
+      router.push("/dashboard");
+      router.refresh();
     } catch (err) {
-      console.error("Catch error:", err);
-      setError(err instanceof Error ? err.message : JSON.stringify(err) || "Something went wrong");
+      console.error("Auth error:", err);
+      setError(err instanceof Error ? err.message : "Something went wrong");
     }
     setLoading(false);
   };
@@ -40,41 +53,47 @@ export default function LoginPage() {
     <main className="min-h-screen flex flex-col justify-center px-5 py-12 safe-t safe-b">
       <div className="max-w-xs mx-auto w-full">
         <h1 className="text-lg font-medium mb-6">
-          {sent ? "Check your email" : "Sign in"}
+          {mode === "signin" ? "Sign in" : "Create account"}
         </h1>
 
-        {sent ? (
-          <div className="text-sm text-[var(--muted)]">
-            <p>Link sent to {email}</p>
-            <button 
-              onClick={() => setSent(false)} 
-              className="mt-4 text-[var(--text)]"
-            >
-              Try different email
-            </button>
-          </div>
-        ) : (
-          <form onSubmit={handleLogin} className="space-y-4">
-            <input
-              type="email"
-              placeholder="Email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              disabled={loading}
-            />
-            {error && (
-              <p className="text-sm text-[var(--red)] break-words">{error}</p>
-            )}
-            <button 
-              type="submit" 
-              disabled={loading}
-              className="w-full py-2.5 bg-[var(--white)] text-[var(--bg)] rounded text-sm font-medium"
-            >
-              {loading ? "Sending..." : "Send link"}
-            </button>
-          </form>
-        )}
+        <form onSubmit={handleSubmit} className="space-y-3">
+          <input
+            type="email"
+            placeholder="Email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            disabled={loading}
+          />
+          <input
+            type="password"
+            placeholder="Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            disabled={loading}
+            minLength={6}
+          />
+          
+          {error && (
+            <p className="text-sm text-[var(--red)]">{error}</p>
+          )}
+          
+          <button 
+            type="submit" 
+            disabled={loading}
+            className="w-full py-2.5 bg-[var(--white)] text-[var(--bg)] rounded text-sm font-medium"
+          >
+            {loading ? "..." : mode === "signin" ? "Sign in" : "Create account"}
+          </button>
+        </form>
+
+        <button 
+          onClick={() => setMode(mode === "signin" ? "signup" : "signin")}
+          className="w-full mt-4 text-sm text-[var(--muted)]"
+        >
+          {mode === "signin" ? "Need an account? Sign up" : "Have an account? Sign in"}
+        </button>
       </div>
     </main>
   );
