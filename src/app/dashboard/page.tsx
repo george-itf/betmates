@@ -43,9 +43,8 @@ export default async function DashboardPage() {
 
   return (
     <main className="min-h-screen bg-[var(--bg)] safe-t safe-b">
-      {/* Header */}
       <div className="header flex items-center justify-between">
-        <h1 className="text-lg font-bold tracking-tight">MATCHPOOL</h1>
+        <span className="font-bold">MatchPool</span>
         <Link href="/profile" className="flex items-center gap-2 text-sm text-[var(--text-secondary)]">
           <IconUser className="icon" />
           <span>{profile?.display_name || "Profile"}</span>
@@ -53,9 +52,8 @@ export default async function DashboardPage() {
       </div>
 
       <div className="p-4 max-w-lg mx-auto">
-        {/* Welcome */}
-        <div className="mb-6">
-          <h2 className="text-xl font-bold">
+        <div className="mb-5">
+          <h2 className="text-lg font-bold">
             {profile?.display_name ? `Hi, ${profile.display_name.split(' ')[0]}` : 'Dashboard'}
           </h2>
           <p className="text-[var(--text-secondary)] text-sm">
@@ -63,42 +61,39 @@ export default async function DashboardPage() {
           </p>
         </div>
 
-        {/* Leagues */}
         {leagues.length > 0 ? (
-          <div className="space-y-3 mb-6">
+          <div className="space-y-3 mb-5">
             {leagues.map((league) => (
               <Link key={league.id} href={`/league/${league.id}`} className="card block">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h3 className="font-semibold">{league.name}</h3>
+                    <h3 className="font-medium">{league.name}</h3>
                     <p className="text-sm text-[var(--text-secondary)]">
                       Season {league.season?.season_number || 1}
                       {league.role === "admin" && <span className="ml-2 badge badge-gray">Admin</span>}
                     </p>
                   </div>
                   <div className="text-right">
-                    <p className="text-xl font-bold text-[var(--accent)]">£{league.season?.pot_amount || 0}</p>
-                    <p className="text-xs text-[var(--text-secondary)] uppercase">Pot</p>
+                    <p className="text-lg font-bold text-[var(--accent)]">£{league.season?.pot_amount || 0}</p>
+                    <p className="text-xs text-[var(--text-secondary)]">Pot</p>
                   </div>
                 </div>
               </Link>
             ))}
           </div>
         ) : (
-          <div className="card text-center py-10 mb-6">
+          <div className="card text-center py-8 mb-5">
             <p className="text-[var(--text-secondary)]">No leagues yet</p>
             <p className="text-sm text-[var(--text-secondary)]">Create one or join with an invite code</p>
           </div>
         )}
 
-        {/* Actions */}
         <div className="flex gap-3">
           <CreateLeagueButton />
           <JoinLeagueButton />
         </div>
       </div>
 
-      {/* Push notification prompt */}
       <PushPrompt />
     </main>
   );

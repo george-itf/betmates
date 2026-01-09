@@ -36,7 +36,6 @@ export default function NewBetPage({ params }: { params: Promise<{ id: string }>
   const router = useRouter();
   const supabase = createClient();
 
-  // Calculate potential return when legs/stake change
   useEffect(() => {
     if (stake && legs.length > 0) {
       const totalOdds = legs.reduce((acc, leg) => {
@@ -112,21 +111,18 @@ export default function NewBetPage({ params }: { params: Promise<{ id: string }>
         }))
       );
 
-      // Get league_id from season
       const { data: season } = await supabase
         .from("seasons")
         .select("league_id")
         .eq("id", seasonId)
         .single();
 
-      // Get user's display name
       const { data: profile } = await supabase
         .from("profiles")
         .select("display_name")
         .eq("id", user.id)
         .single();
 
-      // Log activity
       if (season) {
         await logActivity(supabase, {
           leagueId: season.league_id,
@@ -149,60 +145,57 @@ export default function NewBetPage({ params }: { params: Promise<{ id: string }>
 
   return (
     <main className="min-h-screen bg-[var(--bg)] safe-t safe-b">
-      {/* Header */}
       <div className="header flex items-center justify-between">
-        <Link href={`/league/${leagueId}`} className="text-[var(--accent)] font-medium text-sm">Cancel</Link>
-        <h1 className="font-bold text-sm uppercase tracking-wide">Add Bet</h1>
-        <div className="w-16" />
+        <Link href={`/league/${leagueId}`} className="text-[var(--accent)] text-sm">Cancel</Link>
+        <span className="font-medium text-sm">Add bet</span>
+        <div className="w-12" />
       </div>
 
       <div className="p-4 max-w-lg mx-auto">
         {mode === "choose" && (
-          <div className="space-y-4">
-            <p className="text-[var(--text-secondary)] text-center text-sm mb-6">How do you want to add your bet?</p>
+          <div className="space-y-3">
+            <p className="text-[var(--text-secondary)] text-center text-sm mb-4">How do you want to add your bet?</p>
             
-            {/* Browse Live Odds */}
             <button 
               onClick={() => setShowBrowser(true)} 
-              className="card block w-full text-center py-8 hover:border-[var(--accent)] transition-colors bg-green-50 border-[var(--accent)]"
+              className="card block w-full text-center py-6 border-[var(--accent)]"
             >
-              <IconPlus className="w-10 h-10 mx-auto mb-3 text-[var(--accent)]" />
-              <p className="font-semibold text-[var(--accent)]">Browse Live Odds</p>
-              <p className="text-sm text-[var(--text-secondary)]">Pick from today's fixtures</p>
+              <IconPlus className="w-8 h-8 mx-auto mb-2 text-[var(--accent)]" />
+              <p className="font-medium text-[var(--accent)]">Browse live odds</p>
+              <p className="text-xs text-[var(--text-secondary)]">Pick from today's fixtures</p>
             </button>
 
-            <button onClick={() => { setLegs([{ selection: "", odds: "" }]); setMode("manual"); }} className="card block w-full text-center py-8 hover:border-[var(--accent)] transition-colors">
-              <IconEdit className="w-10 h-10 mx-auto mb-3 text-[var(--text-secondary)]" />
-              <p className="font-semibold">Enter Manually</p>
-              <p className="text-sm text-[var(--text-secondary)]">Type in your bet details</p>
+            <button onClick={() => { setLegs([{ selection: "", odds: "" }]); setMode("manual"); }} className="card block w-full text-center py-6">
+              <IconEdit className="w-8 h-8 mx-auto mb-2 text-[var(--text-secondary)]" />
+              <p className="font-medium">Enter manually</p>
+              <p className="text-xs text-[var(--text-secondary)]">Type in your bet details</p>
             </button>
           </div>
         )}
 
         {mode === "manual" && (
           <div className="space-y-4">
-            {/* Selections */}
             <div className="card">
               <div className="flex items-center justify-between mb-3">
-                <p className="section-header">Selections</p>
+                <span className="section-header">Selections</span>
                 <button
                   onClick={() => setShowBrowser(true)}
-                  className="text-xs text-[var(--accent)] font-medium"
+                  className="text-xs text-[var(--accent)]"
                 >
-                  + Browse Odds
+                  + Browse odds
                 </button>
               </div>
               
               {legs.length === 0 ? (
                 <button
                   onClick={() => setShowBrowser(true)}
-                  className="w-full p-4 border-2 border-dashed border-[var(--border)] rounded text-center hover:border-[var(--accent)] transition"
+                  className="w-full p-4 border border-dashed border-[var(--border)] rounded text-center"
                 >
                   <IconPlus className="w-5 h-5 mx-auto mb-1 text-[var(--accent)]" />
                   <p className="text-sm text-[var(--accent)]">Add selection</p>
                 </button>
               ) : (
-                <div className="space-y-3">
+                <div className="space-y-2">
                   {legs.map((leg, i) => (
                     <div key={i} className="flex gap-2 items-start">
                       <div className="flex-1">
@@ -223,35 +216,34 @@ export default function NewBetPage({ params }: { params: Promise<{ id: string }>
                         onClick={() => removeLeg(i)} 
                         className="p-2 text-[var(--danger)]"
                       >
-                        <IconX className="w-5 h-5" />
+                        <IconX className="w-4 h-4" />
                       </button>
                     </div>
                   ))}
                   
-                  <div className="flex gap-2">
+                  <div className="flex gap-2 pt-2">
                     <button 
                       onClick={() => setShowBrowser(true)} 
-                      className="flex-1 py-2 text-sm text-[var(--accent)] font-medium bg-green-50 rounded"
+                      className="flex-1 py-2 text-xs text-[var(--accent)] border border-[var(--border)] rounded"
                     >
-                      + Browse Odds
+                      + Browse odds
                     </button>
                     <button 
                       onClick={addManualLeg} 
-                      className="flex-1 py-2 text-sm text-[var(--text-secondary)] font-medium bg-[var(--bg)] rounded"
+                      className="flex-1 py-2 text-xs text-[var(--text-secondary)] border border-[var(--border)] rounded"
                     >
-                      + Manual Entry
+                      + Manual
                     </button>
                   </div>
                 </div>
               )}
             </div>
 
-            {/* Stake and returns */}
             <div className="card">
-              <p className="section-header">Bet Details</p>
-              <div className="grid grid-cols-2 gap-4 mb-4">
+              <span className="section-header">Bet details</span>
+              <div className="grid grid-cols-2 gap-3 mb-3">
                 <div>
-                  <label className="block text-xs font-medium mb-2 text-[var(--text-secondary)]">Stake</label>
+                  <label className="block text-xs mb-1 text-[var(--text-secondary)]">Stake</label>
                   <div className="relative">
                     <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-secondary)]">£</span>
                     <input 
@@ -264,7 +256,7 @@ export default function NewBetPage({ params }: { params: Promise<{ id: string }>
                   </div>
                 </div>
                 <div>
-                  <label className="block text-xs font-medium mb-2 text-[var(--text-secondary)]">Returns</label>
+                  <label className="block text-xs mb-1 text-[var(--text-secondary)]">Returns</label>
                   <div className="relative">
                     <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-secondary)]">£</span>
                     <input 
@@ -279,18 +271,18 @@ export default function NewBetPage({ params }: { params: Promise<{ id: string }>
               </div>
 
               <div>
-                <label className="block text-xs font-medium mb-2 text-[var(--text-secondary)]">Status</label>
+                <label className="block text-xs mb-1 text-[var(--text-secondary)]">Status</label>
                 <div className="grid grid-cols-3 gap-2">
                   {["pending", "won", "lost"].map((s) => (
                     <button
                       key={s}
                       type="button"
                       onClick={() => setStatus(s)}
-                      className={`py-2 px-3 rounded text-xs font-semibold uppercase tracking-wide border transition ${
+                      className={`py-2 px-3 rounded text-xs font-medium border ${
                         status === s
-                          ? s === "won" ? "bg-green-50 border-[var(--accent)] text-[var(--accent)]"
-                            : s === "lost" ? "bg-red-50 border-[var(--danger)] text-[var(--danger)]"
-                            : "bg-yellow-50 border-[var(--warning)] text-[var(--warning)]"
+                          ? s === "won" ? "border-[var(--accent)] text-[var(--accent)] bg-[#f0fff4]"
+                            : s === "lost" ? "border-[var(--danger)] text-[var(--danger)] bg-[#fff5f5]"
+                            : "border-[var(--warning)] text-[var(--warning)] bg-[#fffbeb]"
                           : "border-[var(--border)] text-[var(--text-secondary)]"
                       }`}
                     >
@@ -301,19 +293,17 @@ export default function NewBetPage({ params }: { params: Promise<{ id: string }>
               </div>
             </div>
 
-            {/* Save button */}
             <button
               onClick={handleSave}
               disabled={saving || !stake || !potentialReturn || legs.length === 0 || !legs.some((l) => l.selection)}
               className="btn btn-primary w-full"
             >
-              {saving ? "Saving..." : "Save Bet"}
+              {saving ? "Saving..." : "Save bet"}
             </button>
           </div>
         )}
       </div>
 
-      {/* Odds browser modal */}
       <OddsBrowser
         isOpen={showBrowser}
         onClose={() => setShowBrowser(false)}

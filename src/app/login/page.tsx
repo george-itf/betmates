@@ -40,21 +40,20 @@ export default function LoginPage() {
 
   return (
     <main className="min-h-screen flex flex-col safe-t safe-b bg-[var(--bg)]">
-      {/* Header */}
       <div className="header">
-        <Link href="/" className="text-lg font-bold tracking-tight">MATCHPOOL</Link>
+        <Link href="/" className="font-bold">MatchPool</Link>
       </div>
 
-      <div className="flex-1 flex items-center justify-center px-6 py-12">
+      <div className="flex-1 flex items-center justify-center px-5 py-10">
         <div className="w-full max-w-sm">
           <div className="card">
-            <h1 className="text-lg font-bold mb-6">
-              {mode === "signin" ? "Sign In" : "Create Account"}
+            <h1 className="font-bold mb-5">
+              {mode === "signin" ? "Sign in" : "Create account"}
             </h1>
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="block text-xs font-medium mb-2 text-[var(--text-secondary)] uppercase tracking-wide">Email</label>
+                <label className="block text-xs font-medium mb-1 text-[var(--text-secondary)]">Email</label>
                 <input
                   type="email"
                   value={email}
@@ -66,7 +65,7 @@ export default function LoginPage() {
               </div>
               
               <div>
-                <label className="block text-xs font-medium mb-2 text-[var(--text-secondary)] uppercase tracking-wide">Password</label>
+                <label className="block text-xs font-medium mb-1 text-[var(--text-secondary)]">Password</label>
                 <input
                   type="password"
                   value={password}
@@ -79,20 +78,20 @@ export default function LoginPage() {
               </div>
 
               {error && (
-                <div className="p-3 rounded bg-red-50 text-[var(--danger)] text-sm">
+                <div className="p-2 rounded bg-red-50 text-[var(--danger)] text-sm">
                   {error}
                 </div>
               )}
 
               <button type="submit" disabled={loading} className="btn btn-primary w-full">
-                {loading ? "Please wait..." : mode === "signin" ? "Sign In" : "Create Account"}
+                {loading ? "Please wait..." : mode === "signin" ? "Sign in" : "Create account"}
               </button>
             </form>
 
-            <div className="mt-6 pt-6 border-t border-[var(--border)] text-center">
+            <div className="mt-5 pt-5 border-t border-[var(--border)] text-center">
               <button 
                 onClick={() => setMode(mode === "signin" ? "signup" : "signin")}
-                className="text-sm text-[var(--accent)] font-medium"
+                className="text-sm text-[var(--accent)]"
               >
                 {mode === "signin" ? "Don't have an account? Sign up" : "Already have an account? Sign in"}
               </button>
