@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { IconCopy, IconCheck } from "@/components/icons";
 
 export function CopyButton({ text }: { text: string }) {
   const [copied, setCopied] = useState(false);
@@ -13,18 +12,8 @@ export function CopyButton({ text }: { text: string }) {
   };
 
   return (
-    <button onClick={copy} className="btn btn-secondary text-xs py-2 px-3">
-      {copied ? (
-        <>
-          <IconCheck className="w-4 h-4" />
-          <span>Copied</span>
-        </>
-      ) : (
-        <>
-          <IconCopy className="w-4 h-4" />
-          <span>Copy</span>
-        </>
-      )}
+    <button onClick={copy} className="text-sm text-[var(--accent)]">
+      {copied ? "Copied!" : "Copy"}
     </button>
   );
 }

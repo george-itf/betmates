@@ -2,13 +2,23 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
 import { CopyButton } from "@/components/copy-button";
-import { ShareLinkButton } from "@/components/share-link-button";
 import { ActivityFeed } from "@/components/activity-feed";
-import { IconArrowLeft, IconSettings, IconArrowRight, IconPlus } from "@/components/icons";
-import { DeadlineCountdown } from "@/components/deadline-countdown";
 
 interface PageProps {
   params: Promise<{ id: string }>;
+}
+
+function getDeadlineText(deadlineDay: number, deadlineHour: number) {
+  const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const now = new Date();
+  const deadline = new Date();
+  deadline.setDate(deadline.getDate() + ((deadlineDay - deadline.getDay() + 7) % 7 || 7));
+  deadline.setHours(deadlineHour, 0, 0, 0);
+  if (deadline < now) deadline.setDate(deadline.getDate() + 7);
+  const diff = deadline.getTime() - now.getTime();
+  const daysLeft = Math.floor(diff / 86400000);
+  const hoursLeft = Math.floor((diff % 86400000) / 3600000);
+  return `${days[deadlineDay]} ${deadlineHour}:00 (${daysLeft}d ${hoursLeft}h)`;
 }
 
 export default async function LeaguePage({ params }: PageProps) {
@@ -40,7 +50,6 @@ export default async function LeaguePage({ params }: PageProps) {
 
   const currentWeek = season ? Math.max(1, Math.ceil((Date.now() - new Date(season.starts_at).getTime()) / (7 * 24 * 60 * 60 * 1000))) : 1;
 
-  // Check payment
   let hasPaidThisWeek = false;
   if (season) {
     const { data: payment } = await supabase
@@ -54,14 +63,12 @@ export default async function LeaguePage({ params }: PageProps) {
     hasPaidThisWeek = !!payment;
   }
 
-  // Leaderboard
   let leaderboard: Array<{ user_id: string; display_name: string; profit: number }> = [];
   if (season) {
     const { data } = await supabase.rpc("get_season_leaderboard", { p_season_id: season.id });
     leaderboard = data || [];
   }
 
-  // Recent bets
   let bets: Array<{
     id: string; user_id: string; stake: number; status: string; actual_return: number;
     profiles: { display_name: string } | Array<{ display_name: string }>;
@@ -73,20 +80,19 @@ export default async function LeaguePage({ params }: PageProps) {
       .select(`id, user_id, stake, status, actual_return, profiles!bets_user_id_fkey(display_name), bet_legs(selection)`)
       .eq("season_id", season.id)
       .order("placed_at", { ascending: false })
-      .limit(10);
+      .limit(5);
     bets = (data || []) as typeof bets;
   }
 
   const daysLeft = season ? Math.max(0, Math.ceil((new Date(season.ends_at).getTime() - Date.now()) / 86400000)) : 0;
   const buyin = league.weekly_buyin || 5;
 
-  // Get recent activity
   const { data: activityData } = await supabase
     .from("activity_log")
     .select("*")
     .eq("league_id", id)
     .order("created_at", { ascending: false })
-    .limit(20);
+    .limit(10);
 
   const activities = (activityData || []) as Array<{
     id: string;
@@ -96,202 +102,133 @@ export default async function LeaguePage({ params }: PageProps) {
   }>;
 
   return (
-    <main className="min-h-screen bg-[var(--bg)] safe-t" style={{ paddingBottom: '100px' }}>
-      {/* Header */}
+    <main className="min-h-screen bg-[var(--bg)] safe-t" style={{ paddingBottom: '80px' }}>
       <div className="header flex items-center justify-between">
-        <Link href="/dashboard" className="flex items-center gap-1 text-[var(--accent)] font-medium text-sm">
-          <IconArrowLeft className="w-4 h-4" />
-          <span>Back</span>
-        </Link>
+        <Link href="/dashboard" className="text-[var(--accent)] text-sm">← Back</Link>
         {membership.role === "admin" && (
-          <Link href={`/league/${id}/settings`} className="flex items-center gap-1 text-[var(--accent)] font-medium text-sm">
-            <IconSettings className="w-4 h-4" />
-            <span>Settings</span>
-          </Link>
+          <Link href={`/league/${id}/settings`} className="text-[var(--text-secondary)] text-sm">Settings</Link>
         )}
       </div>
 
       <div className="p-4 max-w-lg mx-auto">
-        {/* League header */}
-        <div className="card mb-4">
-          <div className="flex items-start justify-between mb-4">
+        {/* Header */}
+        <div className="mb-5">
+          <div className="flex items-start justify-between">
             <div>
-              <h1 className="text-xl font-bold">{league.name}</h1>
+              <h1 className="text-lg font-bold">{league.name}</h1>
               <p className="text-sm text-[var(--text-secondary)]">Season {season?.season_number || 1} · {daysLeft}d left</p>
             </div>
             <div className="text-right">
-              <p className="text-2xl font-bold text-[var(--accent)]">£{season?.pot_amount || 0}</p>
-              <p className="text-xs text-[var(--text-secondary)] uppercase">Pot</p>
+              <p className="text-xl font-bold text-[var(--accent)]">£{season?.pot_amount || 0}</p>
+              <p className="text-xs text-[var(--text-secondary)]">pot</p>
             </div>
           </div>
+          
+          <div className="mt-3 text-sm text-[var(--text-secondary)]">
+            Deadline: {getDeadlineText(league.bet_deadline_day ?? 5, league.bet_deadline_hour ?? 15)}
+          </div>
+        </div>
 
-          {/* Deadline countdown */}
-          <DeadlineCountdown 
-            deadlineDay={league.bet_deadline_day ?? 5} 
-            deadlineHour={league.bet_deadline_hour ?? 15} 
-          />
-
-          {/* Payment status */}
-          <div className="flex items-center justify-between p-3 bg-[var(--bg)] rounded mt-3">
+        {/* Payment */}
+        <div className="card mb-4">
+          <div className="flex items-center justify-between">
             <div>
-              <p className="font-medium text-sm">Week {currentWeek} buy-in</p>
-              <p className="text-xs text-[var(--text-secondary)]">£{buyin} per week</p>
+              <span className="text-sm">Week {currentWeek} · £{buyin}</span>
             </div>
             {hasPaidThisWeek ? (
-              <span className="badge badge-green">Paid</span>
+              <span className="text-sm text-[var(--accent)]">✓ Paid</span>
             ) : (
               <a
                 href={`https://paypal.me/harbourgate/${buyin}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="btn btn-primary text-xs py-2 px-3"
+                className="text-sm text-[var(--accent)]"
               >
-                Pay £{buyin}
+                Pay →
               </a>
             )}
           </div>
         </div>
 
-        {/* Invite code */}
+        {/* Invite */}
         <div className="card mb-4">
           <div className="flex items-center justify-between">
-            <div>
-              <p className="section-header">Invite Code</p>
-              <p className="text-xl font-bold mono tracking-wider">{league.invite_code}</p>
-            </div>
-            <div className="flex items-center gap-2">
-              <CopyButton text={league.invite_code} />
-              <ShareLinkButton inviteCode={league.invite_code} />
-            </div>
+            <span className="font-mono text-lg">{league.invite_code}</span>
+            <CopyButton text={league.invite_code} />
           </div>
         </div>
 
         {/* Leaderboard */}
         <div className="card mb-4">
-          <p className="section-header">Leaderboard</p>
+          <div className="text-xs text-[var(--text-secondary)] mb-2">Leaderboard</div>
           {leaderboard.length > 0 ? (
-            <div>
+            <div className="space-y-1">
               {leaderboard.map((entry, i) => (
-                <div key={entry.user_id} className="list-item">
-                  <div className="flex items-center gap-3">
-                    <span className={`w-6 h-6 flex items-center justify-center text-xs font-bold rounded ${
-                      i === 0 ? 'bg-yellow-100 text-yellow-700' : 
-                      i === 1 ? 'bg-gray-100 text-gray-600' : 
-                      i === 2 ? 'bg-orange-100 text-orange-700' : 
-                      'bg-[var(--bg)] text-[var(--text-secondary)]'
-                    }`}>
-                      {i + 1}
-                    </span>
-                    <span className={entry.user_id === user.id ? "font-semibold" : ""}>
-                      {entry.display_name}
-                      {entry.user_id === user.id && <span className="text-[var(--text-secondary)] text-sm"> (you)</span>}
-                    </span>
-                  </div>
-                  <span className={`font-semibold ${entry.profit >= 0 ? "text-[var(--accent)]" : "text-[var(--danger)]"}`}>
+                <div key={entry.user_id} className="flex items-center justify-between py-1">
+                  <span className={entry.user_id === user.id ? "font-medium" : ""}>
+                    {i + 1}. {entry.display_name}{entry.user_id === user.id && " (you)"}
+                  </span>
+                  <span className={entry.profit >= 0 ? "text-[var(--accent)]" : "text-[var(--danger)]"}>
                     {entry.profit >= 0 ? "+" : ""}£{entry.profit.toFixed(2)}
                   </span>
                 </div>
               ))}
             </div>
           ) : (
-            <p className="text-[var(--text-secondary)] text-center py-6 text-sm">No bets yet</p>
+            <p className="text-[var(--text-secondary)] text-sm">No bets yet</p>
           )}
         </div>
 
         {/* Recent bets */}
-        <div className="card mb-4">
-          <p className="section-header">Recent Bets</p>
-          {bets.length > 0 ? (
-            <div>
+        {bets.length > 0 && (
+          <div className="card mb-4">
+            <div className="text-xs text-[var(--text-secondary)] mb-2">Recent bets</div>
+            <div className="space-y-2">
               {bets.map((bet) => {
                 const profile = Array.isArray(bet.profiles) ? bet.profiles[0] : bet.profiles;
-                const profit = bet.status === "settled" ? (bet.actual_return || 0) - bet.stake : 0;
                 return (
-                  <div key={bet.id} className="list-item">
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium text-sm">{profile?.display_name}</p>
-                      <p className="text-xs text-[var(--text-secondary)] truncate">
-                        {bet.bet_legs.map((l) => l.selection).join(" · ")}
-                      </p>
+                  <div key={bet.id} className="flex items-center justify-between text-sm">
+                    <div className="min-w-0 flex-1">
+                      <span className="font-medium">{profile?.display_name}</span>
+                      <span className="text-[var(--text-secondary)]"> · </span>
+                      <span className="text-[var(--text-secondary)] truncate">
+                        {bet.bet_legs[0]?.selection}
+                      </span>
                     </div>
-                    <div className="text-right ml-3">
-                      {bet.status === "settled" ? (
-                        <span className={`font-semibold text-sm ${profit >= 0 ? "text-[var(--accent)]" : "text-[var(--danger)]"}`}>
-                          {profit >= 0 ? "+" : ""}£{profit.toFixed(2)}
-                        </span>
-                      ) : (
-                        <span className="badge badge-yellow">£{bet.stake}</span>
-                      )}
-                    </div>
+                    <span className="ml-2">£{bet.stake}</span>
                   </div>
                 );
               })}
             </div>
-          ) : (
-            <p className="text-[var(--text-secondary)] text-center py-6 text-sm">No bets yet</p>
-          )}
-        </div>
-
-        {/* My Bets link */}
-        <Link href={`/league/${id}/bets`} className="card flex items-center justify-between mb-4">
-          <div>
-            <p className="font-semibold text-sm">My Bets</p>
-            <p className="text-xs text-[var(--text-secondary)]">View your bet history and P&L</p>
           </div>
-          <IconArrowRight className="w-5 h-5 text-[var(--text-secondary)]" />
-        </Link>
+        )}
 
-        {/* Group bets link */}
-        <Link href={`/league/${id}/group-bet`} className="card flex items-center justify-between mb-4">
-          <div>
-            <p className="font-semibold text-sm">Group Bets</p>
-            <p className="text-xs text-[var(--text-secondary)]">Vote on legs, share the pot</p>
-          </div>
-          <IconArrowRight className="w-5 h-5 text-[var(--text-secondary)]" />
-        </Link>
-
-        {/* Members link */}
-        <Link href={`/league/${id}/members`} className="card flex items-center justify-between mb-4">
-          <div>
-            <p className="font-semibold text-sm">Members</p>
-            <p className="text-xs text-[var(--text-secondary)]">View league members and payment status</p>
-          </div>
-          <IconArrowRight className="w-5 h-5 text-[var(--text-secondary)]" />
-        </Link>
-
-        {/* Stats link */}
-        <Link href={`/league/${id}/stats`} className="card flex items-center justify-between mb-4">
-          <div>
-            <p className="font-semibold text-sm">Stats</p>
-            <p className="text-xs text-[var(--text-secondary)]">Season statistics and highlights</p>
-          </div>
-          <IconArrowRight className="w-5 h-5 text-[var(--text-secondary)]" />
-        </Link>
-
-        {/* Activity Feed */}
+        {/* Links */}
         <div className="card mb-4">
-          <p className="section-header">Activity</p>
-          <ActivityFeed leagueId={id} initialActivities={activities} userId={user.id} />
+          <div className="space-y-2 text-sm">
+            <Link href={`/league/${id}/bets`} className="block py-1 text-[var(--accent)]">My bets →</Link>
+            <Link href={`/league/${id}/group-bet`} className="block py-1 text-[var(--accent)]">Group bets →</Link>
+            <Link href={`/league/${id}/members`} className="block py-1 text-[var(--accent)]">Members →</Link>
+            <Link href={`/league/${id}/stats`} className="block py-1 text-[var(--accent)]">Stats →</Link>
+          </div>
         </div>
+
+        {/* Activity */}
+        {activities.length > 0 && (
+          <div className="card">
+            <div className="text-xs text-[var(--text-secondary)] mb-2">Activity</div>
+            <ActivityFeed leagueId={id} initialActivities={activities} userId={user.id} />
+          </div>
+        )}
       </div>
 
-      {/* Fixed bottom button */}
-      <div style={{
-        position: 'fixed',
-        bottom: 0,
-        left: 0,
-        right: 0,
-        padding: '16px',
-        background: 'var(--surface)',
-        borderTop: '1px solid var(--border)',
-        zIndex: 50
-      }}>
+      {/* Add bet */}
+      <div className="fixed bottom-0 left-0 right-0 p-3 bg-[var(--surface)] border-t border-[var(--border)]">
         <Link
           href={`/league/${id}/bet/new?season=${season?.id || ''}`}
           className="btn btn-primary w-full"
         >
-          <IconPlus className="w-4 h-4" />
-          <span>Add Bet</span>
+          + Add bet
         </Link>
       </div>
     </main>
