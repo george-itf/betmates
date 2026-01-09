@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
-import { IconArrowLeft, IconPlus } from "@/components/icons";
+import { IconArrowLeft } from "@/components/icons";
 import { CreateGroupBetButton } from "@/components/create-group-bet-button";
 
 interface PageProps {
@@ -32,10 +32,11 @@ export default async function GroupBetsPage({ params }: PageProps) {
 
   if (!league) notFound();
 
+  // Get any season - active first, then most recent
   const seasons = (league.seasons || []) as Array<{ id: string; status: string; season_number: number }>;
   const season = seasons.find((s) => s.status === "active") || seasons[0];
 
-  // Get group bets
+  // Get group bets for the season
   let groupBets: Array<{
     id: string;
     title: string;
@@ -44,6 +45,7 @@ export default async function GroupBetsPage({ params }: PageProps) {
     legs_per_user: number;
     created_at: string;
   }> = [];
+  
   if (season) {
     const { data } = await supabase
       .from("group_bets")
@@ -75,16 +77,22 @@ export default async function GroupBetsPage({ params }: PageProps) {
           </p>
         </div>
 
-        {/* Admin: Create group bet */}
-        {isAdmin && season && (
+        {/* Admin: Create group bet - ALWAYS SHOW FOR ADMIN */}
+        {isAdmin && (
           <div className="mb-4">
-            <CreateGroupBetButton 
-              seasonId={season.id} 
-              leagueId={id}
-              defaultBuyin={league.group_bet_buyin || 2}
-              defaultLegs={league.group_bet_legs_per_user || 4}
-              defaultWinning={league.group_bet_winning_legs || 5}
-            />
+            {season ? (
+              <CreateGroupBetButton 
+                seasonId={season.id} 
+                leagueId={id}
+                defaultBuyin={league.group_bet_buyin || 2}
+                defaultLegs={league.group_bet_legs_per_user || 4}
+                defaultWinning={league.group_bet_winning_legs || 5}
+              />
+            ) : (
+              <div className="card bg-yellow-50 border-yellow-200 text-center py-4">
+                <p className="text-sm text-yellow-800">Create a season first in Settings</p>
+              </div>
+            )}
           </div>
         )}
 
@@ -118,8 +126,8 @@ export default async function GroupBetsPage({ params }: PageProps) {
         ) : (
           <div className="card text-center py-10">
             <p className="text-[var(--text-secondary)]">No group bets yet</p>
-            {isAdmin && (
-              <p className="text-sm text-[var(--text-secondary)] mt-1">Create one to get started</p>
+            {!isAdmin && (
+              <p className="text-sm text-[var(--text-secondary)] mt-1">Ask an admin to create one</p>
             )}
           </div>
         )}

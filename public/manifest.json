@@ -4,8 +4,8 @@
   "description": "Track bets with your mates",
   "start_url": "/dashboard",
   "display": "standalone",
-  "background_color": "#2d2d2d",
-  "theme_color": "#2d2d2d",
+  "background_color": "#1e8e3e",
+  "theme_color": "#1e8e3e",
   "orientation": "portrait",
   "icons": [
     {
