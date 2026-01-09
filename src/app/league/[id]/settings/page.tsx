@@ -5,6 +5,8 @@ import { LeagueSettingsForm } from "@/components/league-settings-form";
 import { MembersList } from "@/components/members-list";
 import { SeasonControls } from "@/components/season-controls";
 import { DangerZone } from "@/components/danger-zone";
+import { CopyButton } from "@/components/copy-button";
+import { RegenerateCodeButton } from "@/components/regenerate-code-button";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -57,7 +59,7 @@ export default async function SettingsPage({ params }: PageProps) {
   }
 
   // Get all members with profiles
-  const { data: members } = await supabase
+  const { data: rawMembers } = await supabase
     .from("league_members")
     .select(`
       id,
@@ -72,10 +74,21 @@ export default async function SettingsPage({ params }: PageProps) {
     .eq("league_id", leagueId)
     .order("joined_at", { ascending: true });
 
-  const currentSeason = league.seasons?.find((s: { status: string }) => s.status === "active");
-  const allSeasons = league.seasons?.sort((a: { season_number: number }, b: { season_number: number }) => 
-    b.season_number - a.season_number
-  ) || [];
+  // Transform members to flatten profiles
+  const members = ((rawMembers || []) as unknown as Array<{
+    id: string;
+    user_id: string;
+    role: string;
+    joined_at: string;
+    profiles: { display_name: string; avatar_url: string | null } | Array<{ display_name: string; avatar_url: string | null }>;
+  }>).map(m => ({
+    ...m,
+    profiles: Array.isArray(m.profiles) ? m.profiles[0] : m.profiles
+  }));
+
+  const seasons = (league.seasons || []) as Array<{ id: string; status: string; season_number: number; starts_at: string; ends_at: string; pot_amount: number; winner_id: string | null }>;
+  const currentSeason = seasons.find((s) => s.status === "active");
+  const allSeasons = [...seasons].sort((a, b) => b.season_number - a.season_number);
 
   return (
     <main className="min-h-screen p-4 safe-top safe-bottom">
@@ -98,18 +111,27 @@ export default async function SettingsPage({ params }: PageProps) {
         {/* Invite Code */}
         <section className="space-y-4">
           <h2 className="text-sm font-medium text-[var(--muted)]">invite code</h2>
-          <InviteCodeCard leagueId={leagueId} inviteCode={league.invite_code} />
+          <div className="card space-y-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs text-[var(--muted)]">share this code</p>
+                <p className="font-mono text-2xl tracking-widest">{league.invite_code}</p>
+              </div>
+              <CopyButton text={league.invite_code} />
+            </div>
+            <RegenerateCodeButton leagueId={leagueId} />
+          </div>
         </section>
 
         {/* Members */}
         <section className="space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="text-sm font-medium text-[var(--muted)]">
-              members ({members?.length || 0})
+              members ({members.length})
             </h2>
           </div>
           <MembersList
-            members={members || []}
+            members={members}
             leagueId={leagueId}
             currentUserId={user.id}
           />
@@ -120,9 +142,9 @@ export default async function SettingsPage({ params }: PageProps) {
           <h2 className="text-sm font-medium text-[var(--muted)]">season</h2>
           <SeasonControls
             leagueId={leagueId}
-            currentSeason={currentSeason}
+            currentSeason={currentSeason || null}
             allSeasons={allSeasons}
-            members={members || []}
+            members={members}
             seasonLengthWeeks={league.season_length_weeks}
           />
         </section>
@@ -136,23 +158,3 @@ export default async function SettingsPage({ params }: PageProps) {
     </main>
   );
 }
-
-// Inline component for invite code
-function InviteCodeCard({ leagueId, inviteCode }: { leagueId: string; inviteCode: string }) {
-  return (
-    <div className="card space-y-3">
-      <div className="flex items-center justify-between">
-        <div>
-          <p className="text-xs text-[var(--muted)]">share this code</p>
-          <p className="font-mono text-2xl tracking-widest">{inviteCode}</p>
-        </div>
-        <CopyButton text={inviteCode} />
-      </div>
-      <RegenerateCodeButton leagueId={leagueId} />
-    </div>
-  );
-}
-
-// Client components need to be separate
-import { CopyButton } from "@/components/copy-button";
-import { RegenerateCodeButton } from "@/components/regenerate-code-button";
